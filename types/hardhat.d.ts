@@ -1,0 +1,22 @@
+import {BigNumberish, BytesLike} from 'ethers';
+import {
+  AragonPluginRepos,
+  AragonVerifyEntry,
+  TestingFork,
+} from '../test/utils/types';
+
+declare module 'hardhat/types' {
+  interface HardhatRuntimeEnvironment {
+    aragonPluginRepos: AragonPluginRepos;
+    aragonToVerifyContracts: AragonVerifyEntry[];
+    managingDAOVocdoniVotingPluginAddress: string;
+    placeholderBuildCIDPath: string;
+    managingDAOActions: {
+      to: string;
+      value: BigNumberish;
+      data: BytesLike;
+      description: string; // Description to be included in proposal metadata
+    }[];
+    testingFork: TestingFork;
+  }
+}
