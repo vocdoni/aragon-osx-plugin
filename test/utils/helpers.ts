@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { promises as fs } from "fs";
-import { Permission } from "./types";
-import { Operation } from "./types";
+import { Permission } from "../../utils/types";
+import { Operation } from "../../utils/types";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -9,7 +9,7 @@ import { ENSRegistry__factory } from "../../typechain";
 import { getMergedABI } from "./abi";
 import { findEvent } from "./event";
 import { PluginRepoRegisteredEvent } from "../../typechain/PluginRepoRegistry";
-import { VersionTag } from "./types";
+import { VersionTag } from "../../utils/types";
 import { PluginRepo__factory } from "../../typechain";
 import { VersionCreatedEvent } from "../../typechain/PluginRepo";
 import IPFS from 'ipfs-http-client';

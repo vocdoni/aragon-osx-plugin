@@ -15,12 +15,11 @@ import {
 } from '../typechain';
 import {deployNewDAO} from './utils/dao';
 import {getInterfaceID} from './utils/helpers';
-import {Operation} from './utils/types';
+import {Operation} from '../utils/types';
 import metadata from '../contracts/build-metadata.json';
 
 import {
   VocdoniVotingSettings,
-  VotingMode,
   pctToRatio,
   ONE_HOUR,
 } from './utils/voting';

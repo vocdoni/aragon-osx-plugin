@@ -1,6 +1,6 @@
 import {DeployFunction} from 'hardhat-deploy/types';
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {UPDATE_INFOS} from '../types';
+import {UPDATE_INFOS} from '../../../utils/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log('\nConcluding VocdoniVoting Plugin Update');

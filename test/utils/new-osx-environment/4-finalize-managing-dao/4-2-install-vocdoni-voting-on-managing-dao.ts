@@ -4,7 +4,7 @@ import buildMetadataJson from '../../../../contracts/build-metadata.json';
 import {findEvent} from '../../event';
 
 import {checkPermission, getContractAddress, hashHelpers} from '../../helpers';
-import {Operation} from '../../types';
+import {Operation} from '../../../../utils/types';
 import {
   DAO__factory,
   VocdoniVotingSetup__factory,

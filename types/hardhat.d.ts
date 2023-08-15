@@ -3,7 +3,7 @@ import {
   AragonPluginRepos,
   AragonVerifyEntry,
   TestingFork,
-} from '../test/utils/types';
+} from '../utils/types';
 
 declare module 'hardhat/types' {
   interface HardhatRuntimeEnvironment {

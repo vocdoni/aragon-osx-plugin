@@ -1,7 +1,7 @@
 import {DeployFunction} from 'hardhat-deploy/types';
 
 import {getContractAddress, managePermissions} from '../../helpers';
-import {Operation, Permission} from '../../types';
+import {Operation, Permission} from '../../../../utils/types';
 import {DAO__factory, PluginRepo__factory} from '../../../../typechain';
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 
