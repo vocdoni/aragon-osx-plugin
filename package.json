@@ -2,7 +2,12 @@
   "name": "@vocdoni/aragon-osx-plugin",
   "version": "0.1",
   "description": "Vocdoni off-chain voting plugin for Aragon OSx",
-  "main": "index.js",
+  "main": "dist/bundle-cjs.js",
+  "module": "dist/bundle-esm.js",
+  "types": "dist/bundle.d.ts",
+  "files": [
+    "dist"
+  ],
   "repository": "https://github.com/vocdoni/aragon-osx-plugin",
   "author": "Vocdoni",
   "license": "AGPL-3.0-or-later",
