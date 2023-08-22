@@ -17,7 +17,141 @@ For more information about the Vocdoni voting protocol, please refer to the [Voc
 
 ## How it works
 
+This repository should not be viewed as an isolated, autonomous software artifact but as a part of a bigger system.
 
+The main idea of the plugin is to interact simultaneously with the Vocdoni voting protocol and the Aragon OSx protocol to enable DAO governance.
+
+The plugin enables token voting governance supported by an executive committee. The executive committee is a temporary key piece that hold special rights over the DAO.
+
+The plugin follows the UUPS upgradeability pattern.
+
+### Plugin configuration & permissions
+
+The plugin is configured with the following parameters:
+
+```solidity
+/// @notice A container for the Vocdoni voting plugin settings
+/// @param onlyCommitteeProposalCreation If true, only committee members can create proposals.
+/// @param minTallyApprovals The minimum number of approvals required for the tally to be considered valid.
+/// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
+/// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
+/// @param minDuration The minimum duration of a proposal.
+/// @param daoTokenAddress The address of the DAO token.
+/// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
+/// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
+struct PluginSettings {
+    bool onlyCommitteeProposalCreation;
+    uint16 minTallyApprovals;
+    uint32 minParticipation;
+    uint32 supportThreshold;
+    uint64 minDuration;
+    address daoTokenAddress;
+    uint256 minProposerVotingPower;
+    string censusStrategy;
+}
+```
+
+These parameters can be changed if the changer holds the `UPDATE_PLUGIN_SETTINGS_PERMISSION` permission.
+
+The function to change them is:
+
+```solidity
+/// @notice Updates the plugin settings.
+/// @param _pluginSettings The new plugin settings.
+/// @dev The called must have the UPDATE_PLUGIN_SETTINGS_PERMISSION_ID permission.
+function updatePluginSettings(PluginSettings memory _pluginSettings) public auth(UPDATE_PLUGIN_SETTINGS_PERMISSION_ID) { ... }
+```
+
+There is also the executive committee list. This list can be modified if the changer holds the `UPDATE_PLUGIN_COMMITTEE_PERMISSION` permission.
+
+The functions to modify the executive committee members are:
+
+```solidity
+function addCommitteeMembers(address[] calldata _members) external override auth (UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID) { ... }
+
+function removeCommitteeMembers(address[] calldata _members) external override auth(UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID) { ... }
+```
+
+It is expected that the plugin parameters and committee members are controlled by the DAO and can be only changed by performing a vote. But it is up to the DAO creator to find the configuration that better acomodates its needs.
+
+
+### Proposals and proposal creation
+
+A proposal is defined as:
+
+```solidity
+/// @notice A container for proposal-related information.
+/// @param executed Whether the proposal is executed or not.
+/// @param vochainProposalId The ID of the proposal in the Vochain.
+/// @param allowFailureMap A bitmap allowing the proposal to succeed, even if individual actions might revert. If the bit at index `i` is 1,
+//         the proposal succeeds even if the `i`th action reverts. A failure map value of 0 requires every action to not revert.
+/// @param parameters The parameters of the proposal.
+/// @param tally The tally of the proposal.
+/// @dev tally only supports [[Yes, No, Abstain]] schema in this order. i.e [[10, 5, 2]] means 10 Yes, 5 No, 2 Abstain.
+/// @param approvers The approvers of the tally.
+/// @param actions The actions to be executed when the proposal passes.
+struct Proposal {
+    bool executed;
+    bytes32 vochainProposalId;
+    uint256 allowFailureMap;
+    ProposalParameters parameters;
+    uint256[][] tally;
+    address[] approvers;
+    IDAO.Action[] actions;
+}
+```
+
+When a proposal is created, the plugin will create a proposal in the Vocdoni blockchain and will store required proposal information on-chain.
+First the proposal needs to be created on the Vocdoni blockchain so the plugin can get the proposal ID.
+
+Depending on the configuration, the proposal can be created by any member of the DAO or only by the executive committee members.
+
+For creating a proposal the following function is used:
+
+```solidity
+/// @notice Internal function for creating a proposal.
+/// @param _vochainProposalId The Vocdoni proposal ID.
+/// @param _allowFailureMap The allow failure map of the proposal.
+/// @param _parameters The parameters of the proposal.
+/// @param _actions The actions of the proposal.
+/// @return The ID of the created proposal.
+function createProposal(
+    bytes32 _vochainProposalId,
+    uint256 _allowFailureMap,
+    ProposalParameters memory _parameters,
+    IDAO.Action[] memory _actions
+) external returns (uint256) { ... }
+```
+
+The voting will happen on the Vocdoni blockchain.
+
+### Set the tally
+
+Once the voting process is finished, the committee members can fetch the results from the Vocdoni blockchain and ensure that the results are valid.
+
+If the results are valid, the committee members can approve the tally and execute the proposal.
+
+The tally can be set on-chain by the committee members calling the following function:
+
+```solidity
+ function setTally(uint256 _proposalId, uint256[][] memory _tally) public override { ... }
+```
+
+### Approve the tally
+
+Once the tally is set, other committee members can approve the results in a multisig like way by calling:
+
+```solidity
+function approveTally(uint256 _proposalId, bool _tryExecution) public override { ... }
+```
+
+### Execute the proposal
+
+If the tally is approved by the required number of committee members, the proposal can be executed by anyone by calling:
+
+```solidity
+ function executeProposal(uint256 _proposalId) public override { ... }
+```
 ## Setup
 
 ### Prerequisites
