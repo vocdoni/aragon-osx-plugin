@@ -1,9 +1,10 @@
 
 analyze:
     create-group: true
-    group-name: Core
+    group-name: Voc-Ara-Osx-Plugin
     solc: 0.8.17
     remappings:
+        - "@aragon/=./node_modules/@aragon/"
         - "@openzeppelin/=./node_modules/@openzeppelin/"
         - "@opengsn/=./node_modules/@opengsn/"
         - "@ensdomains/=./node_modules/@ensdomains/"
