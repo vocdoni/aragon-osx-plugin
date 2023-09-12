@@ -1,4 +1,4 @@
-name: Mythx Changed only
+name: MythX Changed only
 
 on:
   workflow_call:
@@ -8,12 +8,12 @@ on:
         required: true
         type: string
       mode:
-        description: "Mythx scan mode (quick|standard|deep)"
+        description: "MythX scan mode (quick|standard|deep)"
         required: true
         type: string
     secrets:
       MYTHX_API_KEY:
-        description: 'mythx api token'
+        description: 'mythx API Token'
         required: true
   workflow_dispatch:
     inputs:
@@ -22,7 +22,7 @@ on:
         required: true
         type: string
       mode:
-        description: "Mythx scan mode (quick|standard|deep)"
+        description: "MythX scan mode (quick|standard|deep)"
         required: true
         default: standard
         type: choice
@@ -42,13 +42,16 @@ jobs:
         with:
           fetch-depth: 0
           ref: refs/pull/${{ inputs.pr_number }}/merge
-      - name: Install node
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           cache: "yarn"
           node-version: 16
-      - uses: actions/setup-python@v4
-      - name: Install mythx-cli
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Python MythX CLI
         run: pip install mythx-cli
       - name: Changed Files Exporter
         id: files
@@ -59,7 +62,7 @@ jobs:
           pattern: '^.*\.sol$'
       - name: Install deps
         run: yarn
-      - name: Run mythx
+      - name: Run MythX
         run: mythx --yes --output id --format json --api-key ${{ secrets.MYTHX_API_KEY }} analyze --async --mode "$MODE" ${{ steps.files.outputs.files_created }} ${{ steps.files.outputs.files_updated }}
         env:
           MODE: ${{ inputs.mode }}

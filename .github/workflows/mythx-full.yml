@@ -1,4 +1,4 @@
-name: Mythx Full
+name: MythX Full
 
 on:
   workflow_call:
@@ -8,17 +8,17 @@ on:
         required: false
         type: string
       mode:
-        description: "Mythx scan mode (quick|standard|deep)"
+        description: "MythX scan mode (quick|standard|deep)"
         required: true
         type: string
     secrets:
       MYTHX_API_KEY:
-        description: 'mythx api token'
+        description: 'mythx API Token'
         required: true
   workflow_dispatch:
     inputs:
       mode:
-        description: "Mythx scan mode (quick|standard|deep)"
+        description: "MythX scan mode (quick|standard|deep)"
         required: true
         default: standard
         type: choice
@@ -43,19 +43,21 @@ jobs:
         if: ${{ inputs.pr_number == '' }}
         with:
           fetch-depth: 0
-      - name: Install node
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           cache: "yarn"
           node-version: 16
-      - uses: actions/setup-python@v4
-      - name: Install mythx-cli
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Python MythX CLI
         run: pip install mythx-cli
       - name: Install deps
         run: yarn
-      - name: Run mythx
-        #run: mythx --output id --format json --yes --api-key ${{ secrets.MYTHX_API_KEY }} analyze --async --mode "$MODE" packages/contracts/contracts
-        run: mythx --output id --format json --yes --api-key ${{ secrets.MYTHX_API_KEY }} analyze --async --mode "$MODE" contracts/contracts
+      - name: Run MythX
+        run: mythx --output id --format json --yes --api-key ${{ secrets.MYTHX_API_KEY }} analyze --async --mode "$MODE" contracts/
         env:
           MODE: ${{ inputs.mode }}
       - name: Comment Prepare
