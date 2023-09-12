@@ -1,4 +1,4 @@
-name: MythX Full
+name: MythX scans full SC
 
 on:
   workflow_call:
@@ -33,39 +33,84 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       group_id: ${{ steps.comment_prepare.outputs.group_id }}
+      BRANCH_NAME: ${{ steps.myvars.outputs.BRANCH_NAME }}
+      GIT_HASH_SHORT: ${{ steps.myvars.outputs.GIT_HASH_SHORT }}
+      DATE_IN_SECS: ${{ steps.myvars.outputs.DATE_IN_SECS }}
     steps:
       - uses: actions/checkout@v4
         if: ${{ inputs.pr_number != '' }}
         with:
           ref: refs/pull/${{ inputs.pr_number }}/merge
           fetch-depth: 0
+
       - uses: actions/checkout@v4
         if: ${{ inputs.pr_number == '' }}
         with:
           fetch-depth: 0
+
+      - name: Set myvars
+        id: myvars
+        run: |
+          branchname=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-' )
+          dateinsecs=$(date +%s)
+          githashshort=$(git rev-parse --short HEAD)
+          echo "BRANCH_NAME=$branchname" >> $GITHUB_OUTPUT
+          echo "GIT_HASH_SHORT=$githashshort" >> $GITHUB_OUTPUT
+          echo "DATE_IN_SECS=$dateinsecs" >> $GITHUB_OUTPUT
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           cache: "yarn"
           node-version: 16
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Install Python MythX CLI
         run: pip install mythx-cli
+
       - name: Install deps
         run: yarn
+
       - name: Run MythX
-        run: mythx --output id --format json --yes --api-key ${{ secrets.MYTHX_API_KEY }} analyze --async --mode "$MODE" contracts/
+        run: |
+          mythx \
+          --api-key ${{ secrets.MYTHX_API_KEY }} \
+          --format json \
+          --yes \
+          --output id \
+          --config mythx.yml \
+          analyze \
+          --async \
+          --mode "$MODE" \
+          contracts/ 
         env:
           MODE: ${{ inputs.mode }}
+
       - name: Comment Prepare
         id: comment_prepare
         run: |
           id=$(cat id | head -1)
           group_id=$(mythx --format=json --api-key ${{ secrets.MYTHX_API_KEY }} analysis status $id | jq -r .group_id)
           echo "group_id=$group_id" >> $GITHUB_OUTPUT
+
+      - name: Render MythX Reports
+        run: |
+          mythx --output=mythx-report-${{ steps.myvars.outputs.GIT_HASH_SHORT }}.html --api-key ${{ secrets.MYTHX_API_KEY }} render ${{ steps.comment_prepare.outputs.group_id }}
+          ls -la
+
+      - name: Publish MythX Report as Artifact
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: mythx-reports-${{ steps.myvars.outputs.GIT_HASH_SHORT }}
+          path: |
+            id
+            mythx-report-${{ steps.myvars.outputs.GIT_HASH_SHORT }}.html
+
   comment:
     runs-on: ubuntu-latest
     permissions:
@@ -80,6 +125,7 @@ jobs:
           pr_number: ${{ inputs.pr_number }}
           message: 'Scan started in group [https://dashboard.mythx.io/#/console/analyses/groups/${{ needs.mythx.outputs.group_id }}](https://dashboard.mythx.io/#/console/analyses/groups/${{ needs.mythx.outputs.group_id }})'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: SEE HERE FOR DASHBOARD LINK
         run: |
           echo 'Scan started in group https://dashboard.mythx.io/#/console/analyses/groups/${{ needs.mythx.outputs.group_id }}'
