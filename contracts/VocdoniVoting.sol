@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.17;
 
-
 import {SafeCastUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 import {IVotesUpgradeable} from "@openzeppelin/contracts-upgradeable/governance/utils/IVotesUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -44,6 +43,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @param onlyCommitteeProposalCreation If true, only committee members can create proposals.
     /// @param minTallyApprovals The minimum number of approvals required for a tally to be considered accepted.
     /// @param minDuration The minimum duration of a propsal.
+    /// @param expirationTime The maximum expiration time of a proposal. Proposal cannot be executed after this time.
     /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
     /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
     /// @param daoTokenAddress The address of the DAO token.
@@ -53,6 +53,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         bool onlyCommitteeProposalCreation,
         uint16 minTallyApprovals,
         uint64 minDuration,
+        uint64 expirationTime,
         uint32 minParticipation,
         uint32 supportThreshold,
         address daoTokenAddress,
@@ -91,6 +92,11 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @param limit The limit value.
     /// @param actual The actual value.
     error MinDurationOutOfBounds(uint64 limit, uint64 actual);
+
+    /// @notice Trown if the maximum proposal expiration time is out of bounds (more than 1 year).
+    /// @param limit The limit value.
+    /// @param actual The actual value.
+    error ExpirationTimeOutOfBounds(uint64 limit, uint64 actual);
 
     /// @notice Thrown if the start date is invalid.
     /// @param limit The limit value.
@@ -164,6 +170,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
     /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
     /// @param minDuration The minimum duration of a proposal.
+    /// @param expirationTime The maximum expiration time of a proposal. Proposal cannot be executed after.
     /// @param daoTokenAddress The address of the DAO token.
     /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
     /// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
@@ -173,6 +180,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         uint32 minParticipation;
         uint32 supportThreshold;
         uint64 minDuration;
+        uint64 expirationTime;
         address daoTokenAddress;
         uint256 minProposerVotingPower;
         string censusStrategy;
@@ -335,6 +343,10 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         if (pluginSettings.minDuration > 365 days) {
             revert MinDurationOutOfBounds({limit: 365 days, actual: pluginSettings.minDuration});
         }
+
+         if (pluginSettings.expirationTime > 365 days) {
+            revert ExpirationTimeOutOfBounds({limit: 365 days, actual: pluginSettings.expirationTime});
+        }
         
         // update plugin settings
         pluginSettings = _pluginSettings;
@@ -344,6 +356,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
             onlyCommitteeProposalCreation: _pluginSettings.onlyCommitteeProposalCreation,
             minTallyApprovals: _pluginSettings.minTallyApprovals,
             minDuration: _pluginSettings.minDuration,
+            expirationTime: _pluginSettings.expirationTime,
             minParticipation: _pluginSettings.minParticipation,
             supportThreshold: _pluginSettings.supportThreshold,
             daoTokenAddress: _pluginSettings.daoTokenAddress,
@@ -675,15 +688,15 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
                 });
             }
         }
-        // check proposal expiration date and set it to the (endDate + min duration) if it is 0
-        uint64 earliestExpirationDate = endDate + pluginSettings.minDuration;
-        if (_expirationDate == 0) {
-            expirationDate = earliestExpirationDate;
+
+        uint64 maxExpirationDate = endDate + pluginSettings.expirationTime;
+        if (_expirationDate == 0 || _expirationDate <= endDate) {
+            expirationDate = maxExpirationDate;
         } else {
             expirationDate = _expirationDate;
-            if (expirationDate < earliestExpirationDate) {
+            if (expirationDate > maxExpirationDate) {
                 revert InvalidExpirationDate({
-                    limit: earliestExpirationDate,
+                    limit: maxExpirationDate,
                     actual: expirationDate
                 });
             }

@@ -5,15 +5,12 @@
   "main": "dist/bundle-cjs.js",
   "module": "dist/bundle-esm.js",
   "types": "dist/bundle.d.ts",
-  "files": [
-    "dist"
-  ],
   "repository": "https://github.com/vocdoni/aragon-osx-plugin",
   "author": "Vocdoni",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "test": "npx hardhat test",
-    "build": "npx hardhat compile",
+    "build": "npx hardhat compile && ./scripts/gen-typechain.sh",
     "build:npm": "rollup --config rollup.config.ts",
     "coverage": "npx hardhat coverage --solcoverjs ./.solcover.js",
     "flatten": "npx hardhat flatten",

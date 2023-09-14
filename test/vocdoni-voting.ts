@@ -38,6 +38,7 @@ export type VocdoniVotingSettings = {
     onlyCommitteeProposalCreation: boolean;
     minTallyApprovals: number;
     minDuration: number;
+    expirationTime: number;
     minParticipation: number;
     supportThreshold: number;
     daoTokenAddress: string;
@@ -139,6 +140,7 @@ describe('Vocdoni Plugin', function () {
       onlyCommitteeProposalCreation: true,
       minTallyApprovals: 2,
       minDuration: 1,
+      expirationTime: 10000,
       minParticipation: 0,
       supportThreshold: 0,
       daoTokenAddress: governanceErc20Mock.address,
@@ -308,6 +310,7 @@ describe('Vocdoni Plugin', function () {
         .withArgs(vocdoniVotingSettings.onlyCommitteeProposalCreation,
           vocdoniVotingSettings.minTallyApprovals,
           vocdoniVotingSettings.minDuration,
+          vocdoniVotingSettings.expirationTime,
           vocdoniVotingSettings.minParticipation,
           vocdoniVotingSettings.supportThreshold,
           vocdoniVotingSettings.daoTokenAddress,
@@ -369,6 +372,7 @@ describe('Vocdoni Plugin', function () {
         .withArgs(vocdoniVotingSettings.onlyCommitteeProposalCreation,
           vocdoniVotingSettings.minTallyApprovals,
           vocdoniVotingSettings.minDuration,
+          vocdoniVotingSettings.expirationTime,
           vocdoniVotingSettings.minParticipation,
           vocdoniVotingSettings.supportThreshold,
           vocdoniVotingSettings.daoTokenAddress,
@@ -599,6 +603,7 @@ describe('Vocdoni Plugin', function () {
                   minTallyApprovals: 2,
                   minDuration: 1,
                   minParticipation: 0,
+                  expirationTime: 10000,
                   supportThreshold: 0,
                   daoTokenAddress: ethers.constants.AddressZero,
                   censusStrategy: 0,
@@ -792,7 +797,7 @@ describe('Vocdoni Plugin', function () {
       
       it('reverts if invalid expiration date', async() => {
         let currentBlock = await ethers.provider.getBlock("latest");
-        vocdoniProposalParams.expirationDate = currentBlock.timestamp;
+        vocdoniProposalParams.expirationDate = 6744073709551610;
         await expect(
           vocdoniVoting
             .connect(signers[0])
@@ -803,30 +808,6 @@ describe('Vocdoni Plugin', function () {
               dummyActions
             )
         ).to.be.revertedWithCustomError(vocdoniVoting, 'InvalidExpirationDate')
-        
-        vocdoniProposalParams.expirationDate = currentBlock.timestamp - 2;
-        await expect(
-          vocdoniVoting
-            .connect(signers[0])
-            .createProposal(
-              ethers.utils.randomBytes(32),
-              0,
-              vocdoniProposalParams,
-              dummyActions
-            )
-        ).to.be.revertedWithCustomError(vocdoniVoting, 'InvalidExpirationDate')
-
-        vocdoniProposalParams.expirationDate = currentBlock.timestamp + 1000;
-        await expect(
-          vocdoniVoting
-            .connect(signers[0])
-            .createProposal(
-              ethers.utils.randomBytes(32),
-              0,
-              vocdoniProposalParams,
-              dummyActions
-            )
-        ).to.not.be.reverted
       }) 
     })
   });
@@ -899,6 +880,7 @@ describe('Vocdoni Plugin', function () {
                 {
                   minTallyApprovals: 1,
                   minDuration: 1,
+                  expirationTime: 10000,
                   minParticipation: 0,
                   supportThreshold: 0,
                   daoTokenAddress: ethers.constants.AddressZero,

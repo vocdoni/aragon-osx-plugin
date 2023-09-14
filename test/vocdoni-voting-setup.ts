@@ -73,6 +73,7 @@ describe('VocdoniVotingSetup', function () {
       onlyCommitteeProposalCreation: true,
       minTallyApprovals: 1,
       minDuration: ONE_HOUR,
+      expirationTime: ONE_HOUR,
       minParticipation: pctToRatio(20),
       supportThreshold: pctToRatio(50),
       daoTokenAddress: AddressZero,
