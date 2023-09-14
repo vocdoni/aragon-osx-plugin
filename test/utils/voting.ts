@@ -105,6 +105,7 @@ export type VocdoniVotingSettings = {
   onlyCommitteeProposalCreation: boolean;
   minTallyApprovals: number;
   minDuration: number;
+  expirationTime: number;
   minParticipation: BigNumber;
   supportThreshold: BigNumber;
   daoTokenAddress: string;

@@ -137,6 +137,7 @@ contract VocdoniVotingSetup is PluginSetup {
         }
 
         helpers[0] = token;
+        pluginSettings.daoTokenAddress = token;
 
         // Prepare and Deploy the plugin proxy.
         plugin = createERC1967Proxy(

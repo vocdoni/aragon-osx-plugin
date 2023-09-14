@@ -43,6 +43,12 @@
                 "description": "The minimal duration of the tally phase of a voting process"
               },
               {
+                "internalType": "uint64",
+                "name": "expirationTime",
+                "type": "uint64",
+                "description": "The expiration time of the voting process. Cannot be executed afterwards"
+              },
+              {
                 "internalType": "address",
                 "name": "daoTokenAddress",
                 "type": "address",
