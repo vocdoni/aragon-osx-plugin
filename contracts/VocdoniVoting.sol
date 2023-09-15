@@ -361,8 +361,10 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
             revert MinDurationOutOfBounds({limit: 365 days, actual: pluginSettings.minDuration});
         }
 
-         if (pluginSettings.expirationTime > 365 days) {
-            revert ExpirationTimeOutOfBounds({limit: 365 days, actual: pluginSettings.expirationTime});
+        if (lastPluginSettingsChange == uint64(block.number)) {
+            revert PluginSettingsUpdatedTooRecently({
+                lastUpdate: lastPluginSettingsChange
+            });
         }
         
         // update plugin settings
@@ -424,6 +426,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         IDAO.Action[] memory _actions
     ) external returns (uint256) {
         _guardCommittee();
+        _guardPluginSettings();
         if (pluginSettings.onlyCommitteeProposalCreation &&
             !_isCommitteeMember(_msgSender())
         ) {
@@ -607,6 +610,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @inheritdoc IVocdoniVoting
     function executeProposal(uint256 _proposalId) public override {
         _guardCommittee();
+        _guardPluginSettings();
         
         _checkTallyAndExecute(_proposalId);
     }
@@ -748,6 +752,16 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         if (lastCommitteeChange == uint64(block.number)) {
             revert CommitteeUpdatedTooRecently({
                 lastUpdate: lastCommitteeChange
+            });
+        }
+    }
+
+     /// @notice Guard checks that processes key updates are not executed in the same block
+    ///          where the plugin settings changed.
+    function _guardPluginSettings() internal view {
+        if (lastPluginSettingsChange == uint64(block.number)) {
+            revert PluginSettingsUpdatedTooRecently({
+                lastUpdate: lastPluginSettingsChange
             });
         }
     }
