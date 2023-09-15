@@ -230,6 +230,9 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @dev This variable prevents executing a proposal if plugin settings have been changed.
     uint64 private lastPluginSettingsChange;
 
+    /// @notice Keeps track at which block number the committee has been changed the last time.
+    uint64 private lastCommitteeChange;
+
     
     /// @notice Initializes the plugin.
     /// @param _dao The DAO address.
@@ -243,7 +246,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         }
         
         _addAddresses(_committeeAddresses);
-        
+        lastCommitteeChange = uint64(block.number);
         emit CommitteeMembersAdded({newMembers: _committeeAddresses});
         
         _updatePluginSettings(_pluginSettings);
@@ -282,7 +285,14 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
             });
         }
 
+        if (lastCommitteeChange == uint64(block.number)) {
+            revert CommitteeUpdatedTooRecently({
+                lastUpdate: lastPluginSettingsChange
+            });
+        }
+
         _addAddresses(_members);
+        lastCommitteeChange = uint64(block.number);
 
         emit CommitteeMembersAdded({newMembers: _members});
     }
@@ -301,7 +311,14 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
             });
         }
 
+        if (lastCommitteeChange == uint64(block.number)) {
+            revert CommitteeUpdatedTooRecently({
+                lastUpdate: lastPluginSettingsChange
+            });
+        }
+
         _removeAddresses(_members);
+        lastCommitteeChange = uint64(block.number);
 
         emit CommitteeMembersRemoved({removedMembers: _members});
     }
@@ -406,6 +423,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         ProposalParameters memory _parameters,
         IDAO.Action[] memory _actions
     ) external returns (uint256) {
+        _guardCommittee();
         if (pluginSettings.onlyCommitteeProposalCreation &&
             !_isCommitteeMember(_msgSender())
         ) {
@@ -472,7 +490,8 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @param _tally The tally to set.
     /// @dev The caller must be a committee member if the ONLY_COMMITTEE_SET_TALLY flag is set.
     function _setTally(uint256 _proposalId, uint256[][] memory _tally) internal {
-        if (!_isCommitteeMember(_msgSender())) {
+        _guardCommittee();
+        _guardPluginSettings();
             revert OnlyCommittee({
                 sender: _msgSender()
             });
@@ -540,7 +559,8 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @param _proposalId The ID of the proposal to approve.
     /// @dev The caller must be a committee member if the ONLY_COMMITTEE_APPROVE_TALLY flag is set.
     function _approveTally(uint256 _proposalId, bool _tryExecution) internal {
-        if (!_isCommitteeMember(_msgSender())) {
+        _guardCommittee();
+        _guardPluginSettings();
             revert OnlyCommittee({
                 sender: _msgSender()
             });
@@ -559,9 +579,25 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
             });
         }
         
-        proposal.approvers.push(_msgSender());
+        // if committee changed since proposal creation, the proposal approvals of the previous committee members are not valid
+        if (proposal.parameters.securityBlock <= lastCommitteeChange) {
+            address[] memory newApprovers = new address[](0);
+            // newApprovers are the oldApprovers list without the non committee members at the current block
+            uint16 newApproversCount = 0;
+            for (uint16 i = 0; i < proposal.approvers.length; i++) {
+                address oldApprover = proposal.approvers[i];
+                if (_isCommitteeMember(oldApprover) && _hasApprovedTally(proposal, oldApprover)) {
+                    newApprovers[newApproversCount] = oldApprover;
+                    newApproversCount++;
+                }
+            }
+            proposal.approvers = newApprovers;
+            proposal.parameters.securityBlock = lastCommitteeChange;
+        }
         
-        emit TallyApproved({proposalId: _proposalId});
+        proposal.approvers.push(sender);
+
+        emit TallyApproval({proposalId: _proposalId, approver: sender});
         
         if (_tryExecution) {
             _checkTallyAndExecute(_proposalId);
@@ -570,23 +606,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
 
     /// @inheritdoc IVocdoniVoting
     function executeProposal(uint256 _proposalId) public override {
-        _executeProposal(_proposalId);
-    }
-
-    /// @notice Internal function for executing a proposal.
-    /// @param _proposalId The ID of the proposal to execute.
-    /// @dev The caller must be a committee member if the ONLY_COMMITTEE_EXECUTE flag is set.
-    function _executeProposal(uint256 _proposalId) internal {
-        Proposal storage proposal = proposals[_proposalId];
-
-        if (!_isProposalOnTallyPhase(proposal)) {
-            revert ProposalNotInTallyPhase(
-                proposal.parameters.startDate,
-                proposal.parameters.endDate,
-                proposal.parameters.expirationDate,
-                block.timestamp
-            );
-        }
+        _guardCommittee();
         
         _checkTallyAndExecute(_proposalId);
     }
@@ -720,6 +740,16 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
             }
         }
         return false;
+    }
+
+    /// @notice Guard checks that processes key updates are not executed in the same block
+    ///         where the committee changed.
+    function _guardCommittee() internal view {
+        if (lastCommitteeChange == uint64(block.number)) {
+            revert CommitteeUpdatedTooRecently({
+                lastUpdate: lastCommitteeChange
+            });
+        }
     }
 
     /// @notice This empty reserved space is put in place to allow future versions to add new variables
