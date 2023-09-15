@@ -411,7 +411,6 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
 
         if (!_isProposalOnTallyPhase(proposal)) {
             revert ProposalNotInTallyPhase({
-                startDate: proposal.parameters.startDate,
                 endDate: proposal.parameters.endDate,
                 expirationDate: proposal.parameters.expirationDate,
                 currentTimestamp: block.timestamp

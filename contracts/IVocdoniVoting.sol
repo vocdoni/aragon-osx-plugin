@@ -95,11 +95,10 @@ interface IVocdoniVoting {
     error InvalidAddress(address addr);
 
     /// @notice Thrown if the prosal is not in the tally phase
-    /// @param startDate The start date of the proposal
     /// @param endDate The end date of the proposal
     /// @param expirationDate The expiration date of the proposal
     /// @param currentTimestamp The current timestamp
-    error ProposalNotInTallyPhase(uint64 startDate, uint64 endDate, uint64 expirationDate, uint256 currentTimestamp);
+    error ProposalNotInTallyPhase(uint64 endDate, uint64 expirationDate, uint256 currentTimestamp);
 
     /// @notice Thrown if the msg.sender does not have enough voting power
     /// @param required The required voting power
