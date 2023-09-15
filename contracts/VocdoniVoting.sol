@@ -173,6 +173,10 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     function addCommitteeMembers(
         address[] calldata _members
     ) external override auth(UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID) {
+        if (_members.length == 0) {
+            revert("No members provided");
+        }
+
         uint256 newAddresslistLength = addresslistLength() + _members.length;
 
         // Check if the new address list length would be greater than `type(uint16).max`, the maximal number of approvals.
@@ -199,6 +203,10 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     function removeCommitteeMembers(
         address[] calldata _members
     ) external override auth(UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID) {
+        if (_members.length == 0) {
+            revert("No members provided");
+        }
+
         uint16 newAddresslistLength = uint16(addresslistLength() - _members.length);
 
         // Check if the new address list length would become less than the current minimum number of approvals required.
