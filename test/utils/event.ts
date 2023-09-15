@@ -68,7 +68,7 @@ export const VOCDONI_EVENTS = {
   COMMITTEE_MEMBERS_ADDED: 'CommitteeMembersAdded',
   COMMITTEE_MEMBERS_REMOVED: 'CommitteeMembersRemoved',
   TALLY_SET: 'TallySet',
-  TALLY_APPROVED: 'TallyApproved',
+  TALLY_APPROVAL: 'TallyApproval',
   PLUGIN_SETTINGS_UPDATED: 'PluginSettingsUpdated',
   PROPOSAL_CREATED: 'ProposalCreated',
   PROPOSAL_EXECUTED: 'ProposalExecuted',

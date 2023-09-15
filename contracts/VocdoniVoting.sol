@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.17;
 
+import "hardhat/console.sol";
+
 import {SafeCastUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 import {IVotesUpgradeable} from "@openzeppelin/contracts-upgradeable/governance/utils/IVotesUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -60,109 +62,6 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         string censusStrategy,
         uint256 minProposerVotingPower
     );
-
-    /// @notice Emitted when one or more committee members are added.
-    /// @param newMembers The addresses of the new committee members.
-    event CommitteeMembersAdded(address[] indexed newMembers);
-
-    /// @notice Emitted when one or more committee member are removed.
-    /// @param removedMembers The addresses of the removed committee members.
-    event CommitteeMembersRemoved(address[] indexed removedMembers);
-
-    /// @notice Emitted when the tally of a proposal is set.
-    /// @param proposalId The ID of the proposal.
-    /// @param tally The tally.
-    event TallySet(uint256 indexed proposalId, uint256[][] tally);
-
-    /// @notice Emitted when the tally of a proposal is approved.
-    /// @param proposalId The ID of the proposal.
-    event TallyApproved(uint256 indexed proposalId);
-
-    /// @notice Thrown if the address list length is out of bounds.
-    /// @param limit The limit value.
-    /// @param actual The actual value.
-    error AddresslistLengthOutOfBounds(uint16 limit, uint256 actual);
-
-    /// @notice Thrown if the minimal approvals value is out of bounds (less than 1 or greater than the number of members in the address list).
-    /// @param limit The maximal value.
-    /// @param actual The actual value.
-    error MinApprovalsOutOfBounds(uint16 limit, uint16 actual);
-
-    /// @notice Thrown if the minimal duration value is out of bounds (less than one hour or greater than 1 year).
-    /// @param limit The limit value.
-    /// @param actual The actual value.
-    error MinDurationOutOfBounds(uint64 limit, uint64 actual);
-
-    /// @notice Trown if the maximum proposal expiration time is out of bounds (more than 1 year).
-    /// @param limit The limit value.
-    /// @param actual The actual value.
-    error ExpirationTimeOutOfBounds(uint64 limit, uint64 actual);
-
-    /// @notice Thrown if the start date is invalid.
-    /// @param limit The limit value.
-    /// @param actual The actual value.
-    error InvalidStartDate(uint64 limit, uint64 actual);
-
-    /// @notice Thrown if the end date is invalid.
-    /// @param limit The limit value.
-    /// @param actual The actual value.
-    error InvalidEndDate(uint64 limit, uint64 actual);
-
-    /// @notice Thrown if the expiration date is invalid.
-    /// @param limit The expiration date.
-    /// @param actual The actual value.
-    error InvalidExpirationDate(uint64 limit, uint64 actual);
-
-    /// @notice Thrown if the plugin settings are updated too recently.
-    /// @param lastUpdate The block number of the last update.
-    error PluginSettingsUpdatedTooRecently(uint64 lastUpdate, uint64 securityBlock);
-
-    /// @notice Thrown if the proposal is already executed.
-    /// @param proposalId The ID of the proposal.
-    error ProposalAlreadyExecuted(uint256 proposalId);
-
-    /// @notice Thrown if the proposal tally is invalid.
-    /// @param tally The tally of the proposal.
-    error InvalidTally(uint256[][] tally);
-
-    /// @notice Thrown if the proposal tally is already set and approved.
-    /// @param approvals The number of approvals.
-    /// @param minApprovals The minimum number of approvals required.
-    error TallyAlreadyApproved(uint256 approvals, uint16 minApprovals);
-
-    /// @notice Thrown if the proposal tally is not approved by enough committee members.
-    /// @param minApprovals The minimum number of approvals required.
-    /// @param actualApprovals The actual number of approvals.
-    error NotEnoughApprovals(uint16 minApprovals, uint16 actualApprovals);
-
-    /// @notice Thrown if an address is not valid or not supported
-    /// @param addr The address
-    error InvalidAddress(address addr);
-
-    /// @notice Thrown if the prosal is not in the tally phase
-    /// @param startDate The start date of the proposal
-    /// @param endDate The end date of the proposal
-    /// @param expirationDate The expiration date of the proposal
-    /// @param currentTimestamp The current timestamp
-    error ProposalNotInTallyPhase(uint64 startDate, uint64 endDate, uint64 expirationDate, uint256 currentTimestamp);
-
-    /// @notice Thrown if the msg.sender does not have enough voting power
-    /// @param required The required voting power
-    error NotEnoughVotingPower(uint256 required);
-
-    /// @notice Thrown if the msg.sender is not a committee member
-    /// @param sender The sender
-    error OnlyCommittee(address sender);
-
-    /// @notice Thrown if the support threshold is not reached
-    /// @param currentSupport The current support
-    /// @param supportThreshold The support threshold
-    error SupportThresholdNotReached(uint256 currentSupport, uint32 supportThreshold);
-
-    /// @notice Thrown if the minimum participation is not reached
-    /// @param currentParticipation The current participation
-    /// @param minParticipation The minimum participation
-    error MinParticipationNotReached(uint256 currentParticipation,uint32 minParticipation);
 
     /// @notice A container for the Vocdoni voting plugin settings
     /// @param onlyCommitteeProposalCreation If true, only committee members can create proposals.
@@ -227,7 +126,6 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     PluginSettings private pluginSettings;
 
     /// @notice Keeps track at which block number the plugin settings have been changed the last time.
-    /// @dev This variable prevents executing a proposal if plugin settings have been changed.
     uint64 private lastPluginSettingsChange;
 
     /// @notice Keeps track at which block number the committee has been changed the last time.
@@ -345,20 +243,24 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @notice Internal function for updating the plugin settings.
     /// @param _pluginSettings The new plugin settings.
     function _updatePluginSettings(PluginSettings memory _pluginSettings) private {
-        if (pluginSettings.supportThreshold > RATIO_BASE - 1) {
+        if (_pluginSettings.supportThreshold > RATIO_BASE - 1) {
             revert RatioOutOfBounds({
                 limit: RATIO_BASE - 1,
-                actual: pluginSettings.supportThreshold
+                actual: _pluginSettings.supportThreshold
             });
         }
         
         // Require the minimum participation value to be in the interval [0, 10^6], because `>=` comparision is used in the participation criterion.
-        if (pluginSettings.minParticipation > RATIO_BASE) {
-            revert RatioOutOfBounds({limit: RATIO_BASE, actual: pluginSettings.minParticipation});
+        if (_pluginSettings.minParticipation > RATIO_BASE) {
+            revert RatioOutOfBounds({limit: RATIO_BASE, actual: _pluginSettings.minParticipation});
         }
 
-        if (pluginSettings.minDuration > 365 days) {
-            revert MinDurationOutOfBounds({limit: 365 days, actual: pluginSettings.minDuration});
+        if (_pluginSettings.minDuration > 365 days) {
+            revert MinDurationOutOfBounds({limit: 365 days, actual: _pluginSettings.minDuration});
+        }
+
+         if (_pluginSettings.expirationTime > 365 days) {
+            revert ExpirationTimeOutOfBounds({limit: 365 days, actual: _pluginSettings.expirationTime});
         }
 
         if (lastPluginSettingsChange == uint64(block.number)) {
@@ -366,7 +268,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
                 lastUpdate: lastPluginSettingsChange
             });
         }
-        
+
         // update plugin settings
         pluginSettings = _pluginSettings;
         lastPluginSettingsChange = uint64(block.number);
@@ -427,18 +329,20 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     ) external returns (uint256) {
         _guardCommittee();
         _guardPluginSettings();
+
+        address sender = _msgSender();
         if (pluginSettings.onlyCommitteeProposalCreation &&
-            !_isCommitteeMember(_msgSender())
+            !_isCommitteeMember(sender)
         ) {
             revert OnlyCommittee({
-                sender: _msgSender()
+                sender: sender
             });
         }
         
         if (pluginSettings.minProposerVotingPower != 0 &&
             // Because of the checks in `VocdoniVotingSetup`, we can assume that `votingToken` is an [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token.
-            IVotesUpgradeable(pluginSettings.daoTokenAddress).getVotes(_msgSender()) < pluginSettings.minProposerVotingPower &&
-            IERC20Upgradeable(pluginSettings.daoTokenAddress).balanceOf(_msgSender()) < pluginSettings.minProposerVotingPower
+            IVotesUpgradeable(pluginSettings.daoTokenAddress).getVotes(sender) < pluginSettings.minProposerVotingPower &&
+            IERC20Upgradeable(pluginSettings.daoTokenAddress).balanceOf(sender) < pluginSettings.minProposerVotingPower
         ) {
             revert NotEnoughVotingPower({
                 required: pluginSettings.minProposerVotingPower
@@ -464,7 +368,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         proposal.parameters.expirationDate = _parameters.expirationDate;
         proposal.parameters.censusBlock = _parameters.censusBlock;
         proposal.allowFailureMap = _allowFailureMap;
-        proposal.parameters.securityBlock = block.number.toUint64() - 1;
+        proposal.parameters.securityBlock = block.number.toUint64();
         for (uint16 i = 0; i < _actions.length; i++) {
             proposal.actions.push(_actions[i]);
         }
@@ -472,7 +376,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         emit ProposalCreated(
             _proposalId,
             _vochainProposalId,
-            _msgSender(),
+            sender,
             _parameters.startDate,
             _parameters.endDate,
             _parameters.expirationDate,
@@ -495,19 +399,15 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     function _setTally(uint256 _proposalId, uint256[][] memory _tally) internal {
         _guardCommittee();
         _guardPluginSettings();
+        address sender = _msgSender();
+
+        if (!_isCommitteeMember(sender)) {
             revert OnlyCommittee({
-                sender: _msgSender()
+                sender: sender
             });
         }
 
         Proposal storage proposal = proposals[_proposalId];
-        // if plugin settings changed since proposal creation, the proposal is no longer valid and the tally cannot be set
-        if (lastPluginSettingsChange >= proposal.parameters.securityBlock) {
-            revert PluginSettingsUpdatedTooRecently({
-                lastUpdate: lastPluginSettingsChange,
-                securityBlock: proposal.parameters.securityBlock
-            });
-        }
 
         if (!_isProposalOnTallyPhase(proposal)) {
             revert ProposalNotInTallyPhase({
@@ -547,10 +447,10 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         }
         
         proposal.tally = _tally;
-        proposal.approvers.push(_msgSender());
+        proposal.approvers.push(sender);
 
         emit TallySet({proposalId: _proposalId, tally: _tally});
-        emit TallyApproved({proposalId: _proposalId});
+        emit TallyApproval({proposalId: _proposalId, approver: sender});
     }
 
     /// @inheritdoc IVocdoniVoting
@@ -560,28 +460,38 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
 
     /// @notice Internal function for approving a proposal tally.
     /// @param _proposalId The ID of the proposal to approve.
-    /// @dev The caller must be a committee member if the ONLY_COMMITTEE_APPROVE_TALLY flag is set.
     function _approveTally(uint256 _proposalId, bool _tryExecution) internal {
         _guardCommittee();
         _guardPluginSettings();
+
+        address sender = _msgSender();
+        
+        if (!_isCommitteeMember(sender)) {
             revert OnlyCommittee({
-                sender: _msgSender()
+                sender: sender
             });
         }
 
         Proposal storage proposal = proposals[_proposalId];
         
+        // also checks that proposal is in tally phase, as the tally cannot be set otherwise
         if (proposal.tally.length == 0) {
             revert InvalidTally(proposal.tally);
         }
 
-        if (hasApprovedTally(_proposalId)) {
+        if (_hasApprovedTally(proposal, sender)) {
+            revert TallyAlreadyApprovedBySender({
+                sender: sender
+            }); 
+        }
+
+        if (proposal.approvers.length >= pluginSettings.minTallyApprovals) {
             revert TallyAlreadyApproved({
                 approvals: proposal.approvers.length,
                 minApprovals: pluginSettings.minTallyApprovals
             });
         }
-        
+
         // if committee changed since proposal creation, the proposal approvals of the previous committee members are not valid
         if (proposal.parameters.securityBlock <= lastCommitteeChange) {
             address[] memory newApprovers = new address[](0);
@@ -611,7 +521,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     function executeProposal(uint256 _proposalId) public override {
         _guardCommittee();
         _guardPluginSettings();
-        
+
         _checkTallyAndExecute(_proposalId);
     }
 
@@ -635,7 +545,8 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     function _checkTallyAndExecute(uint256 _proposalId) internal {
         Proposal storage proposal = proposals[_proposalId];
 
-         if(proposal.tally.length == 0) {
+        // also checks that proposal is in tally phase, as the tally cannot be set otherwise
+        if(proposal.tally.length == 0) {
             revert InvalidTally({
                 tally: proposal.tally
             });
@@ -736,10 +647,14 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @notice Returns true if msg.sender has approved the given proposal tally
     /// @param _proposalId The ID of the proposal.
     /// @return Whether the msg.sender has approved the proposal tally.
-    function hasApprovedTally(uint256 _proposalId) public view returns (bool) {
+    function hasApprovedTally(uint256 _proposalId, address _member) public view returns (bool) {
         Proposal storage proposal = proposals[_proposalId];
-        for (uint16 i = 0; i < proposal.approvers.length; i++) {
-            if (proposal.approvers[i] == _msgSender()) {
+        return _hasApprovedTally(proposal, _member);
+    }
+
+    function _hasApprovedTally(Proposal memory _proposal, address _member) internal pure returns (bool) {
+        for (uint16 i = 0; i < _proposal.approvers.length; i++) {
+            if (_proposal.approvers[i] == _member) {
                 return true;
             }
         }
