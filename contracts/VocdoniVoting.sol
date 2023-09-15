@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.17;
 
-import "hardhat/console.sol";
-
 import {SafeCastUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 import {IVotesUpgradeable} from "@openzeppelin/contracts-upgradeable/governance/utils/IVotesUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -338,26 +336,27 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         _guardCommittee();
         _guardPluginSettings();
 
+        PluginSettings memory _pluginSettings = pluginSettings;
         address sender = _msgSender();
-        if (pluginSettings.onlyCommitteeProposalCreation &&
-            !_isCommitteeMember(sender)
-        ) {
+        
+        if (_pluginSettings.onlyCommitteeProposalCreation && !_isCommitteeMember(sender)) {
             revert OnlyCommittee({
                 sender: sender
             });
         }
-        
-        if (pluginSettings.minProposerVotingPower != 0 &&
+
+        if (_pluginSettings.minProposerVotingPower != 0) {
             // Because of the checks in `VocdoniVotingSetup`, we can assume that `votingToken` is an [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token.
-            IVotesUpgradeable(pluginSettings.daoTokenAddress).getVotes(sender) < pluginSettings.minProposerVotingPower &&
-            IERC20Upgradeable(pluginSettings.daoTokenAddress).balanceOf(sender) < pluginSettings.minProposerVotingPower
-        ) {
-            revert NotEnoughVotingPower({
-                required: pluginSettings.minProposerVotingPower
-            });
+            uint256 votes = IVotesUpgradeable(_pluginSettings.daoTokenAddress).getVotes(sender);
+            uint256 balance = IERC20Upgradeable(_pluginSettings.daoTokenAddress).balanceOf(sender);
+            
+             if (votes < _pluginSettings.minProposerVotingPower && balance < _pluginSettings.minProposerVotingPower) {
+                revert NotEnoughVotingPower({
+                    required: _pluginSettings.minProposerVotingPower
+                });
+            }
         }
-
-
+            
         (_parameters.startDate,
          _parameters.endDate,
          _parameters.expirationDate) = _validateProposalDates(
@@ -367,7 +366,6 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         );
 
         uint256 _proposalId = _createProposalId();
-        
         Proposal storage proposal = proposals[_proposalId];
         
         proposal.vochainProposalId = _vochainProposalId;
@@ -425,14 +423,11 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
             });
         }
         
-        if (_tally.length != 1) {
+        // only supported tally is [[Yes, No, Abstain]]
+        if (_tally.length != 1 || _tally[0].length != 3) {
             revert InvalidTally({tally: _tally});
         }
 
-        if (_tally[0].length != 3) {
-            revert InvalidTally({tally: _tally});
-        }
-        
         // tally already set
         if (proposal.tally.length != 0) {
             // check proposal not already approved
@@ -450,7 +445,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
                 revert InvalidTally({tally: _tally});
             }
             // reset approvers
-            proposal.approvers = new address[](0);
+           delete proposal.approvers;
         }
         
         proposal.tally = _tally;
