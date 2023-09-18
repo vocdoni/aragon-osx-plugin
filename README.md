@@ -36,6 +36,7 @@ The plugin is configured with the following parameters:
 /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
 /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
 /// @param minDuration The minimum duration of a proposal.
+/// @param expirationTime The maximum expiration time of a proposal. Proposal cannot be executed after this time.
 /// @param daoTokenAddress The address of the DAO token.
 /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
 /// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
@@ -45,6 +46,7 @@ struct PluginSettings {
     uint32 minParticipation;
     uint32 supportThreshold;
     uint64 minDuration;
+    uint64 expirationTime;
     address daoTokenAddress;
     uint256 minProposerVotingPower;
     string censusStrategy;
