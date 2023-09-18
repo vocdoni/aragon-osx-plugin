@@ -84,13 +84,13 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     }
 
     /// @notice A container for the proposal parameters.
-    /// @param censusBlock The block numbers used to generate the census of the proposal
+    /// @param censusBlock The chains with block numbers used to generate the census of the proposal (i.e eth:123456, pol:678910)
     /// @param securityBlock Block number used for limiting contract usage when plugin settings are updated
     /// @param startDate The timestamp when the proposal starts.
     /// @param endDate The timestamp when the proposal ends. At this point the tally can be set.
     /// @param expirationDate The timestamp when the proposal expires. Proposal can't be executed after.
     struct ProposalParameters {
-        uint64[] censusBlock;
+        string[] censusBlock;
         uint64 securityBlock;
         uint64 startDate;
         uint64 endDate;
