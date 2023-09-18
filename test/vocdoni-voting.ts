@@ -320,10 +320,10 @@ describe('Vocdoni Plugin', function () {
         .to.emit(vocdoniVoting, VOCDONI_EVENTS.PLUGIN_SETTINGS_UPDATED)
         .withArgs(vocdoniVotingSettings.onlyCommitteeProposalCreation,
           vocdoniVotingSettings.minTallyApprovals,
-          vocdoniVotingSettings.minDuration,
-          vocdoniVotingSettings.expirationTime,
           vocdoniVotingSettings.minParticipation,
           vocdoniVotingSettings.supportThreshold,
+          vocdoniVotingSettings.minDuration,
+          vocdoniVotingSettings.expirationTime,
           vocdoniVotingSettings.daoTokenAddress,
           vocdoniVotingSettings.censusStrategy,
           vocdoniVotingSettings.minProposerVotingPower
@@ -382,10 +382,10 @@ describe('Vocdoni Plugin', function () {
         .to.emit(vocdoniVoting, VOCDONI_EVENTS.PLUGIN_SETTINGS_UPDATED)
         .withArgs(vocdoniVotingSettings.onlyCommitteeProposalCreation,
           vocdoniVotingSettings.minTallyApprovals,
-          vocdoniVotingSettings.minDuration,
-          vocdoniVotingSettings.expirationTime,
           vocdoniVotingSettings.minParticipation,
           vocdoniVotingSettings.supportThreshold,
+          vocdoniVotingSettings.minDuration,
+          vocdoniVotingSettings.expirationTime,
           vocdoniVotingSettings.daoTokenAddress,
           vocdoniVotingSettings.censusStrategy,
           vocdoniVotingSettings.minProposerVotingPower

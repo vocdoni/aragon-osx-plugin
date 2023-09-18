@@ -42,20 +42,20 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     /// @notice Emitted when the plugin settings are updated.
     /// @param onlyCommitteeProposalCreation If true, only committee members can create proposals.
     /// @param minTallyApprovals The minimum number of approvals required for a tally to be considered accepted.
-    /// @param minDuration The minimum duration of a propsal.
-    /// @param expirationTime The maximum expiration time of a proposal. Proposal cannot be executed after this time.
     /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
     /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
+    /// @param minDuration The minimum duration of a propsal.
+    /// @param expirationTime The maximum expiration time of a proposal. Proposal cannot be executed after this time.
     /// @param daoTokenAddress The address of the DAO token.
     /// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3 
     /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
     event PluginSettingsUpdated(
         bool onlyCommitteeProposalCreation,
         uint16 minTallyApprovals,
-        uint64 minDuration,
-        uint64 expirationTime,
         uint32 minParticipation,
         uint32 supportThreshold,
+        uint64 minDuration,
+        uint64 expirationTime,
         address daoTokenAddress,
         string censusStrategy,
         uint256 minProposerVotingPower
@@ -84,17 +84,17 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
     }
 
     /// @notice A container for the proposal parameters.
-    /// @param censusBlock The chains with block numbers used to generate the census of the proposal (i.e eth:123456, pol:678910)
     /// @param securityBlock Block number used for limiting contract usage when plugin settings are updated
     /// @param startDate The timestamp when the proposal starts.
     /// @param endDate The timestamp when the proposal ends. At this point the tally can be set.
     /// @param expirationDate The timestamp when the proposal expires. Proposal can't be executed after.
+    /// @param censusBlock The chains with block numbers used to generate the census of the proposal (i.e eth:123456, pol:678910)
     struct ProposalParameters {
-        string[] censusBlock;
         uint64 securityBlock;
         uint64 startDate;
         uint64 endDate;
         uint64 expirationDate;
+        string[] censusBlock;
     }
 
     /// @notice A container for proposal-related information.
@@ -117,17 +117,17 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, VocdoniProposal
         IDAO.Action[] actions;
     }
 
-    /// @notice A mapping between proposal IDs and proposal information.
-    mapping(uint256 => Proposal) private proposals;
-
-    /// @notice The current plugin settings.
-    PluginSettings private pluginSettings;
-
     /// @notice Keeps track at which block number the plugin settings have been changed the last time.
     uint64 private lastPluginSettingsChange;
 
     /// @notice Keeps track at which block number the committee has been changed the last time.
     uint64 private lastCommitteeChange;
+
+    /// @notice A mapping between proposal IDs and proposal information.
+    mapping(uint256 => Proposal) private proposals;
+
+    /// @notice The current plugin settings.
+    PluginSettings private pluginSettings;
 
     
     /// @notice Initializes the plugin.
