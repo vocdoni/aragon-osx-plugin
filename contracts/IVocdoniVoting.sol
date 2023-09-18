@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.17;
 
-import {IDAO} from "@aragon/osx/core/dao/IDAO.sol";
-
 /// @title IVocdoniVoting
 /// @author Vocdoni
 /// @notice The Vocdoni off-chain voting contract interface for the OSX plugin.
