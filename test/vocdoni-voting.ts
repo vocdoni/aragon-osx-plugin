@@ -47,7 +47,7 @@ export type VocdoniVotingSettings = {
   };
 
 export type vocdoniProposalParams = {
-  censusBlock: number;
+  censusBlock: [number];
   securityBlock: number;
   startDate: number;
   endDate: number;
@@ -149,7 +149,7 @@ describe('Vocdoni Plugin', function () {
     };
 
     vocdoniProposalParams = {
-      censusBlock: await ethers.provider.getBlockNumber(),
+      censusBlock: [await ethers.provider.getBlockNumber()],
       securityBlock: await ethers.provider.getBlockNumber(),
       startDate: 0,
       endDate: 0,
@@ -949,7 +949,7 @@ describe('Vocdoni Plugin', function () {
       // change plugin settings
       const vochainProposalId = ethers.utils.randomBytes(32)
       let proposalParams = {
-        censusBlock: await ethers.provider.getBlockNumber(),
+        censusBlock: [await ethers.provider.getBlockNumber()],
         securityBlock: await ethers.provider.getBlockNumber(),
         startDate: 0,
         endDate: 0,
@@ -1017,7 +1017,7 @@ describe('Vocdoni Plugin', function () {
         await vocdoniVoting.UPDATE_PLUGIN_SETTINGS_PERMISSION_ID()
       );
       let proposalParams = {
-        censusBlock: await ethers.provider.getBlockNumber(),
+        censusBlock: [await ethers.provider.getBlockNumber()],
         securityBlock: await ethers.provider.getBlockNumber(),
         startDate: 0,
         endDate: await timestampIn(3000),
