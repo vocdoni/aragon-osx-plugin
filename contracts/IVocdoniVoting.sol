@@ -23,7 +23,7 @@ interface IVocdoniVoting {
     /// @param proposalId The ID of the proposal.
     event TallyApproval(uint256 indexed proposalId, address indexed approver);
 
-        /// @notice Thrown if the address list length is out of bounds.
+    /// @notice Thrown if the address list length is out of bounds.
     /// @param limit The limit value.
     /// @param actual The actual value.
     error AddresslistLengthOutOfBounds(uint16 limit, uint256 actual);
@@ -114,7 +114,7 @@ interface IVocdoniVoting {
     /// @notice Thrown if the minimum participation is not reached
     /// @param currentParticipation The current participation
     /// @param minParticipation The minimum participation
-    error MinParticipationNotReached(uint256 currentParticipation,uint32 minParticipation);
+    error MinParticipationNotReached(uint256 currentParticipation, uint32 minParticipation);
 
     /// @notice Adds new committee members.
     /// @param _members The addresses of the new committee members.

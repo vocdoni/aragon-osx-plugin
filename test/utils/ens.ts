@@ -3,7 +3,7 @@ import {ENSRegistry__factory} from '../../typechain';
 
 import ensRegistryArtifact from '../../artifacts/@ensdomains/ens-contracts/contracts/registry/ENSRegistry.sol/ENSRegistry.json';
 import publicResolverArtifact from '../../artifacts/@ensdomains/ens-contracts/contracts/resolvers/PublicResolver.sol/PublicResolver.json';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import {HardhatRuntimeEnvironment} from 'hardhat/types';
 
 export function ensLabelHash(label: string): string {
   return ethers.utils.id(label);
@@ -13,7 +13,10 @@ export function ensDomainHash(name: string): string {
   return ethers.utils.namehash(name);
 }
 
-export async function setupENS(domains: string[], hre: HardhatRuntimeEnvironment): Promise<any> {
+export async function setupENS(
+  domains: string[],
+  hre: HardhatRuntimeEnvironment
+): Promise<any> {
   const {deployments, ethers} = hre;
   const {deploy} = deployments;
   const [deployer] = await ethers.getSigners();

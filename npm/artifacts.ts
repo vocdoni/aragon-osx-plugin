@@ -26,7 +26,6 @@ import * as PluginSetupProcessor from '../artifacts/@aragon/osx/framework/plugin
 import * as VocdoniVoting from '../artifacts/contracts/VocdoniVoting.sol/VocdoniVoting.json';
 import * as VocdoniVotingSetup from '../artifacts/contracts/VocdoniVoting.sol/VocdoniVoting.json';
 
-
 // Token
 //// ERC20
 ////// Governance

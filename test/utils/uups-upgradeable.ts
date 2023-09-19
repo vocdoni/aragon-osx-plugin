@@ -129,7 +129,7 @@ export async function getProtocolVersion(
   try {
     contract.interface.getFunction('protocolVersion');
     protocolVersion = await contract.protocolVersion();
-  } catch (error:any) {
+  } catch (error: any) {
     if (error.code === errors.INVALID_ARGUMENT) {
       protocolVersion = [1, 0, 0];
     } else {

@@ -1,164 +1,163 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { promises as fs } from "fs";
-import { Permission } from "../../utils/types";
-import { Operation } from "../../utils/types";
-import { Contract } from "ethers";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ENSRegistry__factory } from "../../typechain";
-import { getMergedABI } from "./abi";
-import { findEvent } from "./event";
-import { PluginRepoRegisteredEvent } from "../../typechain/PluginRepoRegistry";
-import { VersionTag } from "../../utils/types";
-import { PluginRepo__factory } from "../../typechain";
-import { VersionCreatedEvent } from "../../typechain/PluginRepo";
+import {HardhatRuntimeEnvironment} from 'hardhat/types';
+import {promises as fs} from 'fs';
+import {Permission} from '../../utils/types';
+import {Operation} from '../../utils/types';
+import {Contract} from 'ethers';
+import {ethers} from 'hardhat';
+import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
+import {ENSRegistry__factory} from '../../typechain';
+import {getMergedABI} from './abi';
+import {findEvent} from './event';
+import {PluginRepoRegisteredEvent} from '../../typechain/PluginRepoRegistry';
+import {VersionTag} from '../../utils/types';
+import {PluginRepo__factory} from '../../typechain';
+import {VersionCreatedEvent} from '../../typechain/PluginRepo';
 import IPFS from 'ipfs-http-client';
 import {defaultAbiCoder, keccak256} from 'ethers/lib/utils';
 import {ethers as ethersDirect} from 'ethers';
 
-
 export async function getContractAddress(
-    contractName: string,
-    hre: HardhatRuntimeEnvironment
-  ): Promise<string> {
-    const {deployments, network} = hre;
-  
-    let networkName = network.name;
-  
-    try {
-      const contract = await deployments.get(contractName);
-      if (contract) {
-        return contract.address;
-      }
-    } catch (e) {}
+  contractName: string,
+  hre: HardhatRuntimeEnvironment
+): Promise<string> {
+  const {deployments, network} = hre;
 
-    return getActiveContractAddressInNetwork(contractName, networkName);
-  }
-  
-  export async function getActiveContractAddressInNetwork(
-    contractName: string,
-    networkName: string
-  ): Promise<string> {
-    const activeContracts = await getActiveContractsJSON();
-    try {
-      return activeContracts[networkName][contractName];
-    } catch (e) {
-      console.error(e);
-      return '';
+  let networkName = network.name;
+
+  try {
+    const contract = await deployments.get(contractName);
+    if (contract) {
+      return contract.address;
     }
+  } catch (e) {}
+
+  return getActiveContractAddressInNetwork(contractName, networkName);
+}
+
+export async function getActiveContractAddressInNetwork(
+  contractName: string,
+  networkName: string
+): Promise<string> {
+  const activeContracts = await getActiveContractsJSON();
+  try {
+    return activeContracts[networkName][contractName];
+  } catch (e) {
+    console.error(e);
+    return '';
+  }
+}
+
+export async function getActiveContractsJSON(): Promise<{
+  [index: string]: {[index: string]: string};
+}> {
+  const repoPath = process.env.GITHUB_WORKSPACE || '../../';
+  const activeContractsFile = await fs.readFile(
+    `${repoPath}/active_contracts.json`
+  );
+  const activeContracts = JSON.parse(activeContractsFile.toString());
+  return activeContracts;
+}
+
+export async function managePermissions(
+  permissionManagerContract: Contract,
+  permissions: Permission[]
+): Promise<void> {
+  // filtering permission to only apply those that are needed
+  const items: Permission[] = [];
+  for (const permission of permissions) {
+    if (await isPermissionSetCorrectly(permissionManagerContract, permission)) {
+      continue;
+    }
+    items.push(permission);
   }
 
-  export async function getActiveContractsJSON(): Promise<{
-    [index: string]: {[index: string]: string};
-  }> {
-    const repoPath = process.env.GITHUB_WORKSPACE || '../../';
-    const activeContractsFile = await fs.readFile(
-      `${repoPath}/active_contracts.json`
-    );
-    const activeContracts = JSON.parse(activeContractsFile.toString());
-    return activeContracts;
+  if (items.length === 0) {
+    console.log(`Contract call skipped. No permissions to set...`);
+    return;
   }
 
-  export async function managePermissions(
-    permissionManagerContract: Contract,
-    permissions: Permission[]
-  ): Promise<void> {
-    // filtering permission to only apply those that are needed
-    const items: Permission[] = [];
-    for (const permission of permissions) {
-      if (await isPermissionSetCorrectly(permissionManagerContract, permission)) {
-        continue;
-      }
-      items.push(permission);
-    }
-  
-    if (items.length === 0) {
-      console.log(`Contract call skipped. No permissions to set...`);
-      return;
-    }
-  
+  console.log(
+    `Setting ${items.length} permissions. Skipped ${
+      permissions.length - items.length
+    }`
+  );
+  const tx = await permissionManagerContract.applyMultiTargetPermissions(
+    items.map(item => [
+      item.operation,
+      item.where.address,
+      item.who.address,
+      item.condition || ethers.constants.AddressZero,
+      ethers.utils.id(item.permission),
+    ])
+  );
+  console.log(`Set permissions with ${tx.hash}. Waiting for confirmation...`);
+  await tx.wait();
+
+  items.forEach(permission => {
     console.log(
-      `Setting ${items.length} permissions. Skipped ${
-        permissions.length - items.length
-      }`
+      `${
+        permission.operation === Operation.Grant ? 'Granted' : 'Revoked'
+      } the ${permission.permission} of (${permission.where.name}: ${
+        permission.where.address
+      }) for (${permission.who.name}: ${permission.who.address}), see (tx: ${
+        tx.hash
+      })`
     );
-    const tx = await permissionManagerContract.applyMultiTargetPermissions(
-      items.map(item => [
-        item.operation,
-        item.where.address,
-        item.who.address,
-        item.condition || ethers.constants.AddressZero,
-        ethers.utils.id(item.permission),
-      ])
-    );
-    console.log(`Set permissions with ${tx.hash}. Waiting for confirmation...`);
-    await tx.wait();
-  
-    items.forEach(permission => {
-      console.log(
-        `${
-          permission.operation === Operation.Grant ? 'Granted' : 'Revoked'
-        } the ${permission.permission} of (${permission.where.name}: ${
-          permission.where.address
-        }) for (${permission.who.name}: ${permission.who.address}), see (tx: ${
-          tx.hash
-        })`
-      );
-    });
+  });
+}
+
+export async function isPermissionSetCorrectly(
+  permissionManagerContract: Contract,
+  {operation, where, who, permission, data = '0x'}: Permission
+): Promise<boolean> {
+  const permissionId = ethers.utils.id(permission);
+  const isGranted = await permissionManagerContract.isGranted(
+    where.address,
+    who.address,
+    permissionId,
+    data
+  );
+  if (!isGranted && operation === Operation.Grant) {
+    return false;
   }
 
-  export async function isPermissionSetCorrectly(
-    permissionManagerContract: Contract,
-    {operation, where, who, permission, data = '0x'}: Permission
-  ): Promise<boolean> {
-    const permissionId = ethers.utils.id(permission);
-    const isGranted = await permissionManagerContract.isGranted(
-      where.address,
-      who.address,
-      permissionId,
-      data
-    );
-    if (!isGranted && operation === Operation.Grant) {
-      return false;
-    }
-  
-    if (isGranted && operation === Operation.Revoke) {
-      return false;
-    }
-    return true;
+  if (isGranted && operation === Operation.Revoke) {
+    return false;
   }
+  return true;
+}
 
-  export const DAO_PERMISSIONS = [
-    'ROOT_PERMISSION',
-    'UPGRADE_DAO_PERMISSION',
-    'SET_SIGNATURE_VALIDATOR_PERMISSION',
-    'SET_TRUSTED_FORWARDER_PERMISSION',
-    'SET_METADATA_PERMISSION',
-    'REGISTER_STANDARD_CALLBACK_PERMISSION',
-  ];
+export const DAO_PERMISSIONS = [
+  'ROOT_PERMISSION',
+  'UPGRADE_DAO_PERMISSION',
+  'SET_SIGNATURE_VALIDATOR_PERMISSION',
+  'SET_TRUSTED_FORWARDER_PERMISSION',
+  'SET_METADATA_PERMISSION',
+  'REGISTER_STANDARD_CALLBACK_PERMISSION',
+];
 
-  export async function checkPermission(
-    permissionManagerContract: Contract,
-    permission: Permission
-  ) {
-    const checkStatus = await isPermissionSetCorrectly(
-      permissionManagerContract,
-      permission
-    );
-    if (!checkStatus) {
-      const {who, where, operation} = permission;
-      if (operation === Operation.Grant) {
-        throw new Error(
-          `(${who.name}: ${who.address}) doesn't have ${permission.permission} on (${where.name}: ${where.address}) in ${permissionManagerContract.address}`
-        );
-      }
+export async function checkPermission(
+  permissionManagerContract: Contract,
+  permission: Permission
+) {
+  const checkStatus = await isPermissionSetCorrectly(
+    permissionManagerContract,
+    permission
+  );
+  if (!checkStatus) {
+    const {who, where, operation} = permission;
+    if (operation === Operation.Grant) {
       throw new Error(
-        `(${who.name}: ${who.address}) has ${permission.permission} on (${where.name}: ${where.address}) in ${permissionManagerContract.address}`
+        `(${who.name}: ${who.address}) doesn't have ${permission.permission} on (${where.name}: ${where.address}) in ${permissionManagerContract.address}`
       );
     }
+    throw new Error(
+      `(${who.name}: ${who.address}) has ${permission.permission} on (${where.name}: ${where.address}) in ${permissionManagerContract.address}`
+    );
   }
+}
 
-  // TODO: Add support for L2 such as Arbitrum. (https://discuss.ens.domains/t/register-using-layer-2/688)
+// TODO: Add support for L2 such as Arbitrum. (https://discuss.ens.domains/t/register-using-layer-2/688)
 // Make sure you own the ENS set in the {{NETWORK}}_ENS_DOMAIN variable in .env
 export const ENS_ADDRESSES: {[key: string]: string} = {
   mainnet: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
@@ -288,7 +287,6 @@ export async function isENSDomainRegistered(
 
   return ensRegistryContract.recordExists(ethers.utils.namehash(domain));
 }
-
 
 export async function createPluginRepo(
   hre: HardhatRuntimeEnvironment,

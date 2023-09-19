@@ -1,139 +1,138 @@
 {
-    "ui": {},
-    "pluginSetup": {
-      "prepareInstallation": {
-        "description": "The information required for the installation.",
-        "inputs": [
-          {
-            "internalType": "address[]",
-            "name": "committee",
-            "type": "address[]",
-            "description": "The addresses of the initial committee members to be added."
-          },
-          {
-            "components": [
-              {
-                "internalType": "bool",
-                "name": "onlyCommitteeProposalCreation",
-                "type": "bool",
-                "description": "Whether only committee members can create proposals"
-              },
-              {
-                "internalType": "uint16",
-                "name": "minTallyApprovals",
-                "type": "uint16",
-                "description": "The minimal number of approvals required for a tally to be considered accepted"
-              },
-              {
-                "internalType": "uint32",
-                "name": "minParticipation",
-                "type": "uint32",
-                "description": "The minimal participation required for a proposal to pass"
-              },
-              {
-                "internalType": "uint32",
-                "name": "supportThreshold",
-                "type": "uint32",
-                "description": "The minimal support required for a proposal to pass"
-              },
-              {
-                "internalType": "uint64",
-                "name": "minDuration",
-                "type": "uint64",
-                "description": "The minimal duration of the tally phase of a voting process"
-              },
-              {
-                "internalType": "uint64",
-                "name": "expirationTime",
-                "type": "uint64",
-                "description": "The expiration time of the voting process. Cannot be executed afterwards"
-              },
-              {
-                "internalType": "address",
-                "name": "daoTokenAddress",
-                "type": "address",
-                "description": "The address of the DAO token"
-              },
-              {
-                "internalType": "uint256",
-                "name": "minProposerVotingPower",
-                "type": "uint256",
-                "description": "The minimum voting power required for a voter to be able to create a voting process"
-              },
-               {
-                "internalType": "string",
-                "name": "censusStrategy",
-                "type": "string",
-                "description": "The census strategy to be used for the voting process"
-              }
-            ],
-            "internalType": "struct VocdoniVoting.PluginSettings",
-            "name": "pluginSettingsSettings",
-            "type": "tuple",
-            "description": "The inital vocdoniVoting settings."
-          },
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "token",
-                "type": "address",
-                "description": "The token address. If this is `address(0)`, a new `GovernanceERC20` token is deployed. If not, the existing token is wrapped as an `GovernanceWrappedERC20`."
-              },
-              {
-                "internalType": "string",
-                "name": "name",
-                "type": "string",
-                "description": "The token name. This parameter is only relevant if the token address is `address(0)`."
-              },
-              {
-                "internalType": "string",
-                "name": "symbol",
-                "type": "string",
-                "description": "The token symbol. This parameter is only relevant if the token address is `address(0)`."
-              }
-            ],
-            "internalType": "struct TokenVotingSetup.TokenSettings",
-            "name": "tokenSettings",
-            "type": "tuple",
-            "description": "The token settings that either specify an existing ERC-20 token (`token = address(0)`) or the name and symbol of a new `GovernanceERC20` token to be created."
-          },
-          {
-            "components": [
-              {
-                "internalType": "address[]",
-                "name": "receivers",
-                "type": "address[]",
-                "description": "The receivers of the tokens."
-              },
-              {
-                "internalType": "uint256[]",
-                "name": "amounts",
-                "type": "uint256[]",
-                "description": "The amounts of tokens to be minted for each receiver."
-              }
-            ],
-            "internalType": "struct GovernanceERC20.MintSettings",
-            "name": "mintSettings",
-            "type": "tuple",
-            "description": "The token mint settings struct containing the `receivers` and `amounts`."
-          }
-        ],
-        "prepareUpdate": {
-          "1": {
-            "description": "No input is required for the update.",
-            "inputs": []
-          },
-          "2": {
-            "description": "No input is required for the update.",
-            "inputs": []
-          }
+  "ui": {},
+  "pluginSetup": {
+    "prepareInstallation": {
+      "description": "The information required for the installation.",
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "committee",
+          "type": "address[]",
+          "description": "The addresses of the initial committee members to be added."
         },
-        "prepareUninstallation": {
-          "description": "No input is required for the uninstallation.",
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "onlyCommitteeProposalCreation",
+              "type": "bool",
+              "description": "Whether only committee members can create proposals"
+            },
+            {
+              "internalType": "uint16",
+              "name": "minTallyApprovals",
+              "type": "uint16",
+              "description": "The minimal number of approvals required for a tally to be considered accepted"
+            },
+            {
+              "internalType": "uint32",
+              "name": "minParticipation",
+              "type": "uint32",
+              "description": "The minimal participation required for a proposal to pass"
+            },
+            {
+              "internalType": "uint32",
+              "name": "supportThreshold",
+              "type": "uint32",
+              "description": "The minimal support required for a proposal to pass"
+            },
+            {
+              "internalType": "uint64",
+              "name": "minDuration",
+              "type": "uint64",
+              "description": "The minimal duration of the tally phase of a voting process"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expirationTime",
+              "type": "uint64",
+              "description": "The expiration time of the voting process. Cannot be executed afterwards"
+            },
+            {
+              "internalType": "address",
+              "name": "daoTokenAddress",
+              "type": "address",
+              "description": "The address of the DAO token"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minProposerVotingPower",
+              "type": "uint256",
+              "description": "The minimum voting power required for a voter to be able to create a voting process"
+            },
+            {
+              "internalType": "string",
+              "name": "censusStrategy",
+              "type": "string",
+              "description": "The census strategy to be used for the voting process"
+            }
+          ],
+          "internalType": "struct VocdoniVoting.PluginSettings",
+          "name": "pluginSettingsSettings",
+          "type": "tuple",
+          "description": "The inital vocdoniVoting settings."
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address",
+              "description": "The token address. If this is `address(0)`, a new `GovernanceERC20` token is deployed. If not, the existing token is wrapped as an `GovernanceWrappedERC20`."
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string",
+              "description": "The token name. This parameter is only relevant if the token address is `address(0)`."
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string",
+              "description": "The token symbol. This parameter is only relevant if the token address is `address(0)`."
+            }
+          ],
+          "internalType": "struct TokenVotingSetup.TokenSettings",
+          "name": "tokenSettings",
+          "type": "tuple",
+          "description": "The token settings that either specify an existing ERC-20 token (`token = address(0)`) or the name and symbol of a new `GovernanceERC20` token to be created."
+        },
+        {
+          "components": [
+            {
+              "internalType": "address[]",
+              "name": "receivers",
+              "type": "address[]",
+              "description": "The receivers of the tokens."
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "amounts",
+              "type": "uint256[]",
+              "description": "The amounts of tokens to be minted for each receiver."
+            }
+          ],
+          "internalType": "struct GovernanceERC20.MintSettings",
+          "name": "mintSettings",
+          "type": "tuple",
+          "description": "The token mint settings struct containing the `receivers` and `amounts`."
+        }
+      ],
+      "prepareUpdate": {
+        "1": {
+          "description": "No input is required for the update.",
+          "inputs": []
+        },
+        "2": {
+          "description": "No input is required for the update.",
           "inputs": []
         }
+      },
+      "prepareUninstallation": {
+        "description": "No input is required for the uninstallation.",
+        "inputs": []
       }
     }
   }
-  
+}

@@ -33,7 +33,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     network.name
   );
 
-  const vocdoniVotingRepoAddress = await getContractAddress('vocdoniVoting-repo', hre);
+  const vocdoniVotingRepoAddress = await getContractAddress(
+    'vocdoniVoting-repo',
+    hre
+  );
   const vocdoniVotingRepo = PluginRepo__factory.connect(
     vocdoniVotingRepoAddress,
     ethers.provider

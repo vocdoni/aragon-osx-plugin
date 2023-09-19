@@ -1,12 +1,8 @@
 import {ethers} from 'hardhat';
-import {
-  DAO,
-  DAO__factory,
-} from '../../typechain';
+import {DAO, DAO__factory} from '../../typechain';
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import {ContractFactory} from 'ethers';
 import {upgrades} from 'hardhat';
-
 
 export const ZERO_BYTES32 =
   '0x0000000000000000000000000000000000000000000000000000000000000000';

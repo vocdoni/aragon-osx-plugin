@@ -6,8 +6,8 @@ import governanceWrappedERC20Artifact from '../artifacts/@aragon/osx/token/ERC20
 import vocdoniVotingSetupArtifact from '../artifacts/contracts/VocdoniVotingSetup.sol/VocdoniVotingSetup.json';
 
 export type MintSettings = {
-    receivers: string[];
-    amounts: number[];
+  receivers: string[];
+  amounts: number[];
 };
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {

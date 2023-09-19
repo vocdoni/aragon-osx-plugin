@@ -9,7 +9,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const {deployments, network} = hre;
 
-  const VocdoniVotingSetupDeployment = await deployments.get('VocdoniVotingSetup');
+  const VocdoniVotingSetupDeployment = await deployments.get(
+    'VocdoniVotingSetup'
+  );
   const vocdoniVotingSetup = VocdoniVotingSetup__factory.connect(
     VocdoniVotingSetupDeployment.address,
     deployer

@@ -25,7 +25,9 @@ abstract contract VocdoniProposalUpgradeable is IVocdoniProposal, ERC165Upgradea
     /// @param _interfaceId The ID of the interface.
     /// @return Returns `true` if the interface is supported.
     function supportsInterface(bytes4 _interfaceId) public view virtual override returns (bool) {
-        return _interfaceId == type(IVocdoniProposal).interfaceId || super.supportsInterface(_interfaceId);
+        return
+            _interfaceId == type(IVocdoniProposal).interfaceId ||
+            super.supportsInterface(_interfaceId);
     }
 
     /// @notice Creates a proposal ID.

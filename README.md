@@ -41,15 +41,15 @@ The plugin is configured with the following parameters:
 /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
 /// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
 struct PluginSettings {
-    bool onlyCommitteeProposalCreation;
-    uint16 minTallyApprovals;
-    uint32 minParticipation;
-    uint32 supportThreshold;
-    uint64 minDuration;
-    uint64 expirationTime;
-    address daoTokenAddress;
-    uint256 minProposerVotingPower;
-    string censusStrategy;
+  bool onlyCommitteeProposalCreation;
+  uint16 minTallyApprovals;
+  uint32 minParticipation;
+  uint32 supportThreshold;
+  uint64 minDuration;
+  uint64 expirationTime;
+  address daoTokenAddress;
+  uint256 minProposerVotingPower;
+  string censusStrategy;
 }
 ```
 
@@ -76,7 +76,6 @@ function removeCommitteeMembers(address[] calldata _members) external override a
 
 It is expected that the plugin parameters and committee members are controlled by the DAO and can be only changed by performing a vote. But it is up to the DAO creator to find the configuration that better acomodates its needs.
 
-
 ### Proposals and proposal creation
 
 A proposal is defined as:
@@ -93,13 +92,13 @@ A proposal is defined as:
 /// @param approvers The approvers of the tally.
 /// @param actions The actions to be executed when the proposal passes.
 struct Proposal {
-    bool executed;
-    bytes32 vochainProposalId;
-    uint256 allowFailureMap;
-    ProposalParameters parameters;
-    uint256[][] tally;
-    address[] approvers;
-    IDAO.Action[] actions;
+  bool executed;
+  bytes32 vochainProposalId;
+  uint256 allowFailureMap;
+  ProposalParameters parameters;
+  uint256[][] tally;
+  address[] approvers;
+  IDAO.Action[] actions;
 }
 ```
 
@@ -154,6 +153,7 @@ If the tally is approved by the required number of committee members, the propos
 ```solidity
  function executeProposal(uint256 _proposalId) public override { ... }
 ```
+
 ## Setup
 
 ### Prerequisites

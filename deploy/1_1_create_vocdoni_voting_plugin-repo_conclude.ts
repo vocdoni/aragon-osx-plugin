@@ -1,9 +1,6 @@
 import {DeployFunction} from 'hardhat-deploy/types';
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {
-  PluginRepoFactory__factory,
-  PluginRepo__factory,
-} from '../typechain';
+import {PluginRepoFactory__factory, PluginRepo__factory} from '../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`Concluding VocdoniVotingSetup deployment.\n`);

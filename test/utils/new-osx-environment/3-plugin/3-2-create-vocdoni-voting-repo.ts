@@ -30,7 +30,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     network.name
   );
 
-  const vocdoniVotingSetupContract = await getContractAddress('MultisigSetup', hre);
+  const vocdoniVotingSetupContract = await getContractAddress(
+    'MultisigSetup',
+    hre
+  );
 
   await createPluginRepo(hre, 'vocdoniVoting');
   await populatePluginRepo(hre, 'vocdoniVoting', [
