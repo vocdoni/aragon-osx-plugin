@@ -65,8 +65,8 @@ export const MEMBERSHIP_EVENTS = {
 };
 
 export const VOCDONI_EVENTS = {
-  COMMITTEE_MEMBERS_ADDED: 'CommitteeMembersAdded',
-  COMMITTEE_MEMBERS_REMOVED: 'CommitteeMembersRemoved',
+  EXECUTION_MULTISIG_MEMBERS_ADDED: 'ExecutionMultisigMembersAdded',
+  EXECUTION_MULTISIG_MEMBERS_REMOVED: 'ExecutionMultisigMembersRemoved',
   TALLY_SET: 'TallySet',
   TALLY_APPROVAL: 'TallyApproval',
   PLUGIN_SETTINGS_UPDATED: 'PluginSettingsUpdated',

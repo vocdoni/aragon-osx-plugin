@@ -15,8 +15,8 @@ import {IVocdoniVoting} from "./IVocdoniVoting.sol";
 
 /// @title VocdoniVoting
 /// @author Vocdoni
-/// @notice The Vocdoni off-chain voting data contract for the OSX plugin.
-/// @notice The voting Proposal is managed off-chain on the Vocdoni blockchain.
+/// @notice The Vocdoni gasless voting data contract for the OSX plugin.
+/// @notice The voting Proposal is managed gasless on the Vocdoni blockchain.
 contract VocdoniVoting is
     IVocdoniVoting,
     PluginUUPSUpgradeable,
@@ -28,9 +28,9 @@ contract VocdoniVoting is
     /// @notice The [ERC-165](https://eips.ethereum.org/EIPS/eip-165) interface ID of the contract.
     bytes4 internal constant VOCDONI_INTERFACE_ID =
         this.initialize.selector ^
-            this.addCommitteeMembers.selector ^
-            this.removeCommitteeMembers.selector ^
-            this.isCommitteeMember.selector ^
+            this.addExecutionMultisigMembers.selector ^
+            this.removeExecutionMultisigMembers.selector ^
+            this.isExecutionMultisigMember.selector ^
             this.setTally.selector ^
             this.approveTally.selector ^
             this.executeProposal.selector;
@@ -39,12 +39,12 @@ contract VocdoniVoting is
     bytes32 public constant UPDATE_PLUGIN_SETTINGS_PERMISSION_ID =
         keccak256("UPDATE_PLUGIN_SETTINGS_PERMISSION");
 
-    /// @notice The ID of the permission required to add/remove committee members.
-    bytes32 public constant UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID =
-        keccak256("UPDATE_PLUGIN_COMMITTEE_PERMISSION");
+    /// @notice The ID of the permission required to add/remove executionMultisig members.
+    bytes32 public constant UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID =
+        keccak256("UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION");
 
     /// @notice Emitted when the plugin settings are updated.
-    /// @param onlyCommitteeProposalCreation If true, only committee members can create proposals.
+    /// @param onlyExecutionMultisigProposalCreation If true, only executionMultisig members can create proposals.
     /// @param minTallyApprovals The minimum number of approvals required for a tally to be considered accepted.
     /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
     /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
@@ -54,7 +54,7 @@ contract VocdoniVoting is
     /// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
     /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
     event PluginSettingsUpdated(
-        bool onlyCommitteeProposalCreation,
+        bool onlyExecutionMultisigProposalCreation,
         uint16 minTallyApprovals,
         uint32 minParticipation,
         uint32 supportThreshold,
@@ -66,7 +66,7 @@ contract VocdoniVoting is
     );
 
     /// @notice A container for the Vocdoni voting plugin settings
-    /// @param onlyCommitteeProposalCreation If true, only committee members can create proposals.
+    /// @param onlyExecutionMultisigProposalCreation If true, only executionMultisig members can create proposals.
     /// @param minTallyApprovals The minimum number of approvals required for the tally to be considered valid.
     /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
     /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
@@ -76,7 +76,7 @@ contract VocdoniVoting is
     /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
     /// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
     struct PluginSettings {
-        bool onlyCommitteeProposalCreation;
+        bool onlyExecutionMultisigProposalCreation;
         uint16 minTallyApprovals;
         uint32 minParticipation;
         uint32 supportThreshold;
@@ -124,8 +124,8 @@ contract VocdoniVoting is
     /// @notice Keeps track at which block number the plugin settings have been changed the last time.
     uint64 private lastPluginSettingsChange;
 
-    /// @notice Keeps track at which block number the committee has been changed the last time.
-    uint64 private lastCommitteeChange;
+    /// @notice Keeps track at which block number the executionMultisig has been changed the last time.
+    uint64 private lastExecutionMultisigChange;
 
     /// @notice A mapping between proposal IDs and proposal information.
     mapping(uint256 => Proposal) private proposals;
@@ -135,25 +135,25 @@ contract VocdoniVoting is
 
     /// @notice Initializes the plugin.
     /// @param _dao The DAO address.
-    /// @param _committeeAddresses The addresses of the committee.
+    /// @param _executionMultisigAddresses The addresses of the executionMultisig.
     /// @param _pluginSettings The initial plugin settings.
     function initialize(
         IDAO _dao,
-        address[] calldata _committeeAddresses,
+        address[] calldata _executionMultisigAddresses,
         PluginSettings memory _pluginSettings
     ) external initializer {
         __PluginUUPSUpgradeable_init(_dao);
 
-        if (_committeeAddresses.length > type(uint16).max) {
+        if (_executionMultisigAddresses.length > type(uint16).max) {
             revert AddresslistLengthOutOfBounds({
                 limit: type(uint16).max,
-                actual: _committeeAddresses.length
+                actual: _executionMultisigAddresses.length
             });
         }
 
-        _addAddresses(_committeeAddresses);
-        lastCommitteeChange = uint64(block.number);
-        emit CommitteeMembersAdded({newMembers: _committeeAddresses});
+        _addAddresses(_executionMultisigAddresses);
+        lastExecutionMultisigChange = uint64(block.number);
+        emit ExecutionMultisigMembersAdded({newMembers: _executionMultisigAddresses});
 
         _updatePluginSettings(_pluginSettings);
     }
@@ -178,9 +178,9 @@ contract VocdoniVoting is
     }
 
     /// @inheritdoc IVocdoniVoting
-    function addCommitteeMembers(
+    function addExecutionMultisigMembers(
         address[] calldata _members
-    ) external override auth(UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID) {
+    ) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) {
         if (_members.length == 0) {
             revert("No members provided");
         }
@@ -195,20 +195,20 @@ contract VocdoniVoting is
             });
         }
 
-        if (lastCommitteeChange == uint64(block.number)) {
-            revert CommitteeUpdatedTooRecently({lastUpdate: lastPluginSettingsChange});
+        if (lastExecutionMultisigChange == uint64(block.number)) {
+            revert ExecutionMultisigUpdatedTooRecently({lastUpdate: lastPluginSettingsChange});
         }
 
         _addAddresses(_members);
-        lastCommitteeChange = uint64(block.number);
+        lastExecutionMultisigChange = uint64(block.number);
 
-        emit CommitteeMembersAdded({newMembers: _members});
+        emit ExecutionMultisigMembersAdded({newMembers: _members});
     }
 
     /// @inheritdoc IVocdoniVoting
-    function removeCommitteeMembers(
+    function removeExecutionMultisigMembers(
         address[] calldata _members
-    ) external override auth(UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID) {
+    ) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) {
         if (_members.length == 0) {
             revert("No members provided");
         }
@@ -223,25 +223,25 @@ contract VocdoniVoting is
             });
         }
 
-        if (lastCommitteeChange == uint64(block.number)) {
-            revert CommitteeUpdatedTooRecently({lastUpdate: lastPluginSettingsChange});
+        if (lastExecutionMultisigChange == uint64(block.number)) {
+            revert ExecutionMultisigUpdatedTooRecently({lastUpdate: lastPluginSettingsChange});
         }
 
         _removeAddresses(_members);
-        lastCommitteeChange = uint64(block.number);
+        lastExecutionMultisigChange = uint64(block.number);
 
-        emit CommitteeMembersRemoved({removedMembers: _members});
+        emit ExecutionMultisigMembersRemoved({removedMembers: _members});
     }
 
     /// @inheritdoc IVocdoniVoting
-    function isCommitteeMember(address _member) public view override returns (bool) {
-        return _isCommitteeMember(_member);
+    function isExecutionMultisigMember(address _member) public view override returns (bool) {
+        return _isExecutionMultisigMember(_member);
     }
 
-    /// @notice Internal function for checking whether an address is a committee member.
+    /// @notice Internal function for checking whether an address is a executionMultisig member.
     /// @param _member The address to check.
-    /// @return Whether the address is a committee member.
-    function _isCommitteeMember(address _member) internal view returns (bool) {
+    /// @return Whether the address is a executionMultisig member.
+    function _isExecutionMultisigMember(address _member) internal view returns (bool) {
         return isListed(_member);
     }
 
@@ -289,7 +289,7 @@ contract VocdoniVoting is
         lastPluginSettingsChange = uint64(block.number);
 
         emit PluginSettingsUpdated({
-            onlyCommitteeProposalCreation: _pluginSettings.onlyCommitteeProposalCreation,
+            onlyExecutionMultisigProposalCreation: _pluginSettings.onlyExecutionMultisigProposalCreation,
             minTallyApprovals: _pluginSettings.minTallyApprovals,
             minDuration: _pluginSettings.minDuration,
             expirationTime: _pluginSettings.expirationTime,
@@ -347,14 +347,14 @@ contract VocdoniVoting is
         ProposalParameters memory _parameters,
         IDAO.Action[] memory _actions
     ) external returns (uint256) {
-        _guardCommittee();
+        _guardExecutionMultisig();
         _guardPluginSettings();
 
         PluginSettings memory _pluginSettings = pluginSettings;
         address sender = _msgSender();
 
-        if (_pluginSettings.onlyCommitteeProposalCreation && !_isCommitteeMember(sender)) {
-            revert OnlyCommittee({sender: sender});
+        if (_pluginSettings.onlyExecutionMultisigProposalCreation && !_isExecutionMultisigMember(sender)) {
+            revert OnlyExecutionMultisig({sender: sender});
         }
 
         if (_pluginSettings.minProposerVotingPower != 0) {
@@ -416,14 +416,14 @@ contract VocdoniVoting is
     /// @notice Internal function for setting the tally of a given proposal.
     /// @param _proposalId The ID of the proposal to set the tally of.
     /// @param _tally The tally to set.
-    /// @dev The caller must be a committee member if the ONLY_COMMITTEE_SET_TALLY flag is set.
+    /// @dev The caller must be a executionMultisig member if the ONLY_EXECUTION_MULTISIG_SET_TALLY flag is set.
     function _setTally(uint256 _proposalId, uint256[][] memory _tally) internal {
-        _guardCommittee();
+        _guardExecutionMultisig();
         _guardPluginSettings();
         address sender = _msgSender();
 
-        if (!_isCommitteeMember(sender)) {
-            revert OnlyCommittee({sender: sender});
+        if (!_isExecutionMultisigMember(sender)) {
+            revert OnlyExecutionMultisig({sender: sender});
         }
 
         Proposal storage proposal = proposals[_proposalId];
@@ -477,13 +477,13 @@ contract VocdoniVoting is
     /// @notice Internal function for approving a proposal tally.
     /// @param _proposalId The ID of the proposal to approve.
     function _approveTally(uint256 _proposalId, bool _tryExecution) internal {
-        _guardCommittee();
+        _guardExecutionMultisig();
         _guardPluginSettings();
 
         address sender = _msgSender();
 
-        if (!_isCommitteeMember(sender)) {
-            revert OnlyCommittee({sender: sender});
+        if (!_isExecutionMultisigMember(sender)) {
+            revert OnlyExecutionMultisig({sender: sender});
         }
 
         Proposal storage proposal = proposals[_proposalId];
@@ -504,20 +504,20 @@ contract VocdoniVoting is
             });
         }
 
-        // if committee changed since proposal creation, the proposal approvals of the previous committee members are not valid
-        if (proposal.parameters.securityBlock <= lastCommitteeChange) {
+        // if executionMultisig changed since proposal creation, the proposal approvals of the previous executionMultisig members are not valid
+        if (proposal.parameters.securityBlock <= lastExecutionMultisigChange) {
             address[] memory newApprovers = new address[](0);
-            // newApprovers are the oldApprovers list without the non committee members at the current block
+            // newApprovers are the oldApprovers list without the non executionMultisig members at the current block
             uint16 newApproversCount = 0;
             for (uint16 i = 0; i < proposal.approvers.length; i++) {
                 address oldApprover = proposal.approvers[i];
-                if (_isCommitteeMember(oldApprover) && _hasApprovedTally(proposal, oldApprover)) {
+                if (_isExecutionMultisigMember(oldApprover) && _hasApprovedTally(proposal, oldApprover)) {
                     newApprovers[newApproversCount] = oldApprover;
                     newApproversCount++;
                 }
             }
             proposal.approvers = newApprovers;
-            proposal.parameters.securityBlock = lastCommitteeChange;
+            proposal.parameters.securityBlock = lastExecutionMultisigChange;
         }
 
         proposal.approvers.push(sender);
@@ -531,7 +531,7 @@ contract VocdoniVoting is
 
     /// @inheritdoc IVocdoniVoting
     function executeProposal(uint256 _proposalId) public override {
-        _guardCommittee();
+        _guardExecutionMultisig();
         _guardPluginSettings();
 
         _checkTallyAndExecute(_proposalId);
@@ -661,10 +661,10 @@ contract VocdoniVoting is
     }
 
     /// @notice Guard checks that processes key updates are not executed in the same block
-    ///         where the committee changed.
-    function _guardCommittee() internal view {
-        if (lastCommitteeChange == uint64(block.number)) {
-            revert CommitteeUpdatedTooRecently({lastUpdate: lastCommitteeChange});
+    ///         where the executionMultisig changed.
+    function _guardExecutionMultisig() internal view {
+        if (lastExecutionMultisigChange == uint64(block.number)) {
+            revert ExecutionMultisigUpdatedTooRecently({lastUpdate: lastExecutionMultisigChange});
         }
     }
 

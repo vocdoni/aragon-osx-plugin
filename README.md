@@ -21,7 +21,7 @@ This repository should not be viewed as an isolated, autonomous software artifac
 
 The main idea of the plugin is to interact simultaneously with the Vocdoni voting protocol and the Aragon OSx protocol to enable DAO governance.
 
-The plugin enables token voting governance supported by an executive committee. The executive committee is a temporary key piece that hold special rights over the DAO.
+The plugin enables token voting governance supported by an execution multisig. The execution multisig is a temporary key piece that hold special rights over the DAO.
 
 The plugin follows the UUPS upgradeability pattern.
 
@@ -31,7 +31,7 @@ The plugin is configured with the following parameters:
 
 ```solidity
 /// @notice A container for the Vocdoni voting plugin settings
-/// @param onlyCommitteeProposalCreation If true, only committee members can create proposals.
+/// @param onlyExecutionMultisigProposalCreation If true, only execution multisig members can create proposals.
 /// @param minTallyApprovals The minimum number of approvals required for the tally to be considered valid.
 /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
 /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
@@ -41,7 +41,7 @@ The plugin is configured with the following parameters:
 /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
 /// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
 struct PluginSettings {
-  bool onlyCommitteeProposalCreation;
+  bool onlyExecutionMultisigProposalCreation;
   uint16 minTallyApprovals;
   uint32 minParticipation;
   uint32 supportThreshold;
@@ -64,17 +64,17 @@ The function to change them is:
 function updatePluginSettings(PluginSettings memory _pluginSettings) public auth(UPDATE_PLUGIN_SETTINGS_PERMISSION_ID) { ... }
 ```
 
-There is also the executive committee list. This list can be modified if the changer holds the `UPDATE_PLUGIN_COMMITTEE_PERMISSION` permission.
+There is also the execution multisig list. This list can be modified if the changer holds the `UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION` permission.
 
-The functions to modify the executive committee members are:
+The functions to modify the execution multisig members are:
 
 ```solidity
-function addCommitteeMembers(address[] calldata _members) external override auth (UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID) { ... }
+function addExecutionMultisigMembers(address[] calldata _members) external override auth (UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) { ... }
 
-function removeCommitteeMembers(address[] calldata _members) external override auth(UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID) { ... }
+function removeExecutionMultisigMembers(address[] calldata _members) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) { ... }
 ```
 
-It is expected that the plugin parameters and committee members are controlled by the DAO and can be only changed by performing a vote. But it is up to the DAO creator to find the configuration that better acomodates its needs.
+It is expected that the plugin parameters and execution multisig members are controlled by the DAO and can be only changed by performing a vote. But it is up to the DAO creator to find the configuration that better acomodates its needs.
 
 ### Proposals and proposal creation
 
@@ -105,7 +105,7 @@ struct Proposal {
 When a proposal is created, the plugin will create a proposal in the Vocdoni blockchain and will store required proposal information on-chain.
 First the proposal needs to be created on the Vocdoni blockchain so the plugin can get the proposal ID.
 
-Depending on the configuration, the proposal can be created by any member of the DAO or only by the executive committee members.
+Depending on the configuration, the proposal can be created by any member of the DAO or only by the execution multisig members.
 
 For creating a proposal the following function is used:
 
@@ -128,11 +128,11 @@ The voting will happen on the Vocdoni blockchain.
 
 ### Set the tally
 
-Once the voting process is finished, the committee members can fetch the results from the Vocdoni blockchain and ensure that the results are valid.
+Once the voting process is finished, the execution multisig members can fetch the results from the Vocdoni blockchain and ensure that the results are valid.
 
-If the results are valid, the committee members can approve the tally and execute the proposal.
+If the results are valid, the execution multisig members can approve the tally and execute the proposal.
 
-The tally can be set on-chain by the committee members calling the following function:
+The tally can be set on-chain by the execution multisig members calling the following function:
 
 ```solidity
  function setTally(uint256 _proposalId, uint256[][] memory _tally) public override { ... }
@@ -140,7 +140,7 @@ The tally can be set on-chain by the committee members calling the following fun
 
 ### Approve the tally
 
-Once the tally is set, other committee members can approve the results in a multisig like way by calling:
+Once the tally is set, other execution multisig members can approve the results in a multisig like way by calling:
 
 ```solidity
 function approveTally(uint256 _proposalId, bool _tryExecution) public override { ... }
@@ -148,7 +148,7 @@ function approveTally(uint256 _proposalId, bool _tryExecution) public override {
 
 ### Execute the proposal
 
-If the tally is approved by the required number of committee members, the proposal can be executed by anyone by calling:
+If the tally is approved by the required number of execution multisig members, the proposal can be executed by anyone by calling:
 
 ```solidity
  function executeProposal(uint256 _proposalId) public override { ... }

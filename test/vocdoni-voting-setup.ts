@@ -45,8 +45,8 @@ const UPDATE_PLUGIN_SETTINGS_PERMISSION_ID = ethers.utils.id(
   'UPDATE_PLUGIN_SETTINGS_PERMISSION'
 );
 
-const UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID = ethers.utils.id(
-  'UPDATE_PLUGIN_COMMITTEE_PERMISSION'
+const UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID = ethers.utils.id(
+  'UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION'
 );
 const UPGRADE_PERMISSION_ID = ethers.utils.id('UPGRADE_PLUGIN_PERMISSION');
 const EXECUTE_PERMISSION_ID = ethers.utils.id('EXECUTE_PERMISSION');
@@ -66,7 +66,7 @@ describe('VocdoniVotingSetup', function () {
     targetDao = await deployNewDAO(signers[0]);
 
     defaultVocdoniVotingSettings = {
-      onlyCommitteeProposalCreation: true,
+      onlyExecutionMultisigProposalCreation: true,
       minTallyApprovals: 1,
       minDuration: ONE_HOUR,
       expirationTime: ONE_HOUR,
@@ -277,7 +277,7 @@ describe('VocdoniVotingSetup', function () {
           plugin,
           targetDao.address,
           AddressZero,
-          UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID,
+          UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID,
         ],
         [
           Operation.Grant,
@@ -382,7 +382,7 @@ describe('VocdoniVotingSetup', function () {
           plugin,
           targetDao.address,
           AddressZero,
-          UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID,
+          UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID,
         ],
         [
           Operation.Grant,
@@ -440,7 +440,7 @@ describe('VocdoniVotingSetup', function () {
           plugin,
           targetDao.address,
           AddressZero,
-          UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID,
+          UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID,
         ],
         [
           Operation.Grant,
@@ -582,7 +582,7 @@ describe('VocdoniVotingSetup', function () {
           plugin,
           targetDao.address,
           AddressZero,
-          UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID,
+          UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID,
         ],
         [
           Operation.Revoke,

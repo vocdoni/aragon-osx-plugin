@@ -6,17 +6,17 @@
       "inputs": [
         {
           "internalType": "address[]",
-          "name": "committee",
+          "name": "executionMultisig",
           "type": "address[]",
-          "description": "The addresses of the initial committee members to be added."
+          "description": "The addresses of the initial executionMultisig members to be added."
         },
         {
           "components": [
             {
               "internalType": "bool",
-              "name": "onlyCommitteeProposalCreation",
+              "name": "onlyExecutionMultisigProposalCreation",
               "type": "bool",
-              "description": "Whether only committee members can create proposals"
+              "description": "Whether only execution multisig members can create proposals"
             },
             {
               "internalType": "uint16",

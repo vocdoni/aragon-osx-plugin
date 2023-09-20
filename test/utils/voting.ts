@@ -102,7 +102,7 @@ export function toBytes32(num: number): string {
 }
 
 export type VocdoniVotingSettings = {
-  onlyCommitteeProposalCreation: boolean;
+  onlyExecutionMultisigProposalCreation: boolean;
   minTallyApprovals: number;
   minDuration: number;
   expirationTime: number;

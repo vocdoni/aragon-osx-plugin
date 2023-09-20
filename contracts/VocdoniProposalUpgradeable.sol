@@ -8,7 +8,7 @@ import {IVocdoniProposal} from "./IVocdoniProposal.sol";
 import {IDAO} from "@aragon/osx/core/dao/IDAO.sol";
 
 /// @title VocdoniProposalUpgradeable
-/// @notice An abstract contract containing the traits and internal functionality to create and execute off-chain proposals that can be inherited by upgradeable DAO plugins.
+/// @notice An abstract contract containing the traits and internal functionality to create and execute gasless proposals that can be inherited by upgradeable DAO plugins.
 /// @dev Slighly modified from the original Aragon OSx ProposalUpgradeable contract.
 abstract contract VocdoniProposalUpgradeable is IVocdoniProposal, ERC165Upgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
