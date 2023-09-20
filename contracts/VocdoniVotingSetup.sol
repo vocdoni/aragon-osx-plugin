@@ -73,7 +73,7 @@ contract VocdoniVotingSetup is PluginSetup {
     ) external returns (address plugin, PreparedSetupData memory preparedSetupData) {
         // Decode `_data` to extract the params needed for deploying and initializing `VocdoniVoting` plugin.
         (
-            address[] memory committee,
+            address[] memory executionMultisig,
             VocdoniVoting.PluginSettings memory pluginSettings,
             TokenSettings memory tokenSettings,
             // only used for GovernanceERC20(token is not passed)
@@ -144,7 +144,7 @@ contract VocdoniVotingSetup is PluginSetup {
             abi.encodeWithSelector(
                 VocdoniVoting.initialize.selector,
                 _dao,
-                committee,
+                executionMultisig,
                 pluginSettings
             )
         );
@@ -170,7 +170,7 @@ contract VocdoniVotingSetup is PluginSetup {
             plugin,
             _dao,
             PermissionLib.NO_CONDITION,
-            vocdoniVoting.UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID()
+            vocdoniVoting.UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID()
         );
 
         permissions[2] = PermissionLib.MultiTargetPermission(
@@ -241,7 +241,7 @@ contract VocdoniVotingSetup is PluginSetup {
             _payload.plugin,
             _dao,
             PermissionLib.NO_CONDITION,
-            vocdoniVoting.UPDATE_PLUGIN_COMMITTEE_PERMISSION_ID()
+            vocdoniVoting.UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID()
         );
 
         permissions[2] = PermissionLib.MultiTargetPermission(

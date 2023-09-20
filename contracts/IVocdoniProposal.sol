@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 import {IDAO} from "@aragon/osx/core/dao/IDAO.sol";
 
 /// @title IVocdoniProposal
-/// @notice An interface to be implemented by DAO plugins that create and execute off-chain proposals.
+/// @notice An interface to be implemented by DAO plugins that create and execute gasless proposals.
 /// @dev Slighly modified from the original Aragon OSx IProposal interface.
 interface IVocdoniProposal {
     /// @notice Emitted when a proposal is created.

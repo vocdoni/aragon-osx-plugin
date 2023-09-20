@@ -1,7 +1,7 @@
 {
   "name": "@vocdoni/aragon-osx-plugin",
   "version": "0.1",
-  "description": "Vocdoni off-chain voting plugin for Aragon OSx",
+  "description": "Vocdoni gasless voting plugin for Aragon OSx",
   "main": "dist/bundle-cjs.js",
   "module": "dist/bundle-esm.js",
   "types": "dist/bundle.d.ts",

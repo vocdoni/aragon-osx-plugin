@@ -22,16 +22,16 @@ import {deployWithProxy} from './utils/dao';
 import {getInterfaceID, OZ_ERRORS} from './utils/helpers';
 
 export const vocdoniVotingInterface = new ethers.utils.Interface([
-  'function addCommitteeMembers(address[] calldata _members)',
-  'function removeCommitteeMembers(address[] calldata _members)',
-  'function isCommitteeMember(address _member)',
+  'function addExecutionMultisigMembers(address[] calldata _members)',
+  'function removeExecutionMultisigMembers(address[] calldata _members)',
+  'function isExecutionMultisigMember(address _member)',
   'function setTally(uint256 _proposalId, uint256[][] memory _tally)',
   'function approveTally(uint256 _proposalId, bool _tryExecution)',
   'function executeProposal(uint256 _proposalId)',
 ]);
 
 export type VocdoniVotingSettings = {
-  onlyCommitteeProposalCreation: boolean;
+  onlyExecutionMultisigProposalCreation: boolean;
   minTallyApprovals: number;
   minDuration: number;
   expirationTime: number;
@@ -129,7 +129,7 @@ describe('Vocdoni Plugin', function () {
     );
 
     vocdoniVotingSettings = {
-      onlyCommitteeProposalCreation: true,
+      onlyExecutionMultisigProposalCreation: true,
       minTallyApprovals: 2,
       minDuration: 1,
       expirationTime: 10000,
@@ -156,7 +156,7 @@ describe('Vocdoni Plugin', function () {
       vocdoniVoting.address,
       ethers.utils.id('EXECUTE_PERMISSION')
     );
-    // grant committee permissions to signers[0]
+    // grant executionMultisig permissions to signers[0]
     dao.grant(
       vocdoniVoting.address,
       signers[0].address,
@@ -165,9 +165,9 @@ describe('Vocdoni Plugin', function () {
     dao.grant(
       vocdoniVoting.address,
       signers[0].address,
-      ethers.utils.id('UPDATE_PLUGIN_COMMITTEE_PERMISSION')
+      ethers.utils.id('UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION')
     );
-    // grant committee permissions to signers[1]
+    // grant executionMultisig permissions to signers[1]
     dao.grant(
       vocdoniVoting.address,
       signers[1].address,
@@ -176,7 +176,7 @@ describe('Vocdoni Plugin', function () {
     dao.grant(
       vocdoniVoting.address,
       signers[1].address,
-      ethers.utils.id('UPDATE_PLUGIN_COMMITTEE_PERMISSION')
+      ethers.utils.id('UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION')
     );
   });
 
@@ -310,7 +310,7 @@ describe('Vocdoni Plugin', function () {
       )
         .to.emit(vocdoniVoting, VOCDONI_EVENTS.PLUGIN_SETTINGS_UPDATED)
         .withArgs(
-          vocdoniVotingSettings.onlyCommitteeProposalCreation,
+          vocdoniVotingSettings.onlyExecutionMultisigProposalCreation,
           vocdoniVotingSettings.minTallyApprovals,
           vocdoniVotingSettings.minParticipation,
           vocdoniVotingSettings.supportThreshold,
@@ -378,7 +378,7 @@ describe('Vocdoni Plugin', function () {
       await expect(vocdoniVoting.updatePluginSettings(vocdoniVotingSettings))
         .to.emit(vocdoniVoting, VOCDONI_EVENTS.PLUGIN_SETTINGS_UPDATED)
         .withArgs(
-          vocdoniVotingSettings.onlyCommitteeProposalCreation,
+          vocdoniVotingSettings.onlyExecutionMultisigProposalCreation,
           vocdoniVotingSettings.minTallyApprovals,
           vocdoniVotingSettings.minParticipation,
           vocdoniVotingSettings.supportThreshold,
@@ -502,9 +502,9 @@ describe('Vocdoni Plugin', function () {
     });
   });
 
-  describe('isCommitteeMember', async () => {
+  describe('isExecutionMultisigMember', async () => {
     it('should return false, if user is not listed', async () => {
-      expect(await vocdoniVoting.isCommitteeMember(signers[0].address)).to.be
+      expect(await vocdoniVoting.isExecutionMultisigMember(signers[0].address)).to.be
         .false;
     });
 
@@ -514,13 +514,13 @@ describe('Vocdoni Plugin', function () {
         [signers[0].address],
         vocdoniVotingSettings
       );
-      expect(await vocdoniVoting.isCommitteeMember(signers[0].address)).to.be
+      expect(await vocdoniVoting.isExecutionMultisigMember(signers[0].address)).to.be
         .true;
     });
   });
 
-  describe('addCommitteeMembers:', async () => {
-    it('should add new members to the committee address list and emit the `CommitteeMembersAdded` event', async () => {
+  describe('addExecutionMultisigMembers:', async () => {
+    it('should add new members to the executionMultisig address list and emit the `ExecutionMultisigMembersAdded` event', async () => {
       await vocdoniVoting.initialize(
         dao.address,
         [signers[0].address],
@@ -532,8 +532,8 @@ describe('Vocdoni Plugin', function () {
 
       // add a new member
       await expect(
-        vocdoniVoting.addCommitteeMembers([signers[1].address])
-      ).to.emit(vocdoniVoting, VOCDONI_EVENTS.COMMITTEE_MEMBERS_ADDED);
+        vocdoniVoting.addExecutionMultisigMembers([signers[1].address])
+      ).to.emit(vocdoniVoting, VOCDONI_EVENTS.EXECUTION_MULTISIG_MEMBERS_ADDED);
       //.withArgs({newMembers: [signers[1].address]});
 
       expect(await vocdoniVoting.isListed(signers[0].address)).to.equal(true);
@@ -541,8 +541,8 @@ describe('Vocdoni Plugin', function () {
     });
   });
 
-  describe('removeCommitteeMembers:', async () => {
-    it('should remove users from the committee address list and emit the `CommitteeMembersRemoved` event', async () => {
+  describe('removeExecutionMultisigMembers:', async () => {
+    it('should remove users from the executionMultisig address list and emit the `ExecutionMultisigMembersRemoved` event', async () => {
       vocdoniVotingSettings.minTallyApprovals = 1;
       await vocdoniVoting.initialize(
         dao.address,
@@ -555,8 +555,8 @@ describe('Vocdoni Plugin', function () {
 
       // remove an existing member
       await expect(
-        vocdoniVoting.removeCommitteeMembers([signers[1].address])
-      ).to.emit(vocdoniVoting, VOCDONI_EVENTS.COMMITTEE_MEMBERS_REMOVED);
+        vocdoniVoting.removeExecutionMultisigMembers([signers[1].address])
+      ).to.emit(vocdoniVoting, VOCDONI_EVENTS.EXECUTION_MULTISIG_MEMBERS_REMOVED);
       //.withArgs([signers[1].address]);
 
       expect(await vocdoniVoting.isListed(signers[0].address)).to.equal(true);
@@ -571,7 +571,7 @@ describe('Vocdoni Plugin', function () {
         vocdoniVotingSettings
       );
 
-      await expect(vocdoniVoting.removeCommitteeMembers([signers[0].address]))
+      await expect(vocdoniVoting.removeExecutionMultisigMembers([signers[0].address]))
         .to.be.revertedWithCustomError(vocdoniVoting, 'MinApprovalsOutOfBounds')
         .withArgs(
           (await vocdoniVoting.addresslistLength()).sub(1),
@@ -587,10 +587,10 @@ describe('Vocdoni Plugin', function () {
         vocdoniVotingSettings
       );
 
-      await expect(vocdoniVoting.removeCommitteeMembers([signers[1].address]))
+      await expect(vocdoniVoting.removeExecutionMultisigMembers([signers[1].address]))
         .not.to.be.reverted;
 
-      await expect(vocdoniVoting.removeCommitteeMembers([signers[2].address]))
+      await expect(vocdoniVoting.removeExecutionMultisigMembers([signers[2].address]))
         .to.be.revertedWithCustomError(vocdoniVoting, 'MinApprovalsOutOfBounds')
         .withArgs(
           (await vocdoniVoting.addresslistLength()).sub(1),
@@ -746,7 +746,7 @@ describe('Vocdoni Plugin', function () {
 
     context('onlyCommitteProposalCreation', async () => {
       it('creates a proposal when unlisted accounts are allowed', async () => {
-        vocdoniVotingSettings.onlyCommitteeProposalCreation = false;
+        vocdoniVotingSettings.onlyExecutionMultisigProposalCreation = false;
         await vocdoniVoting.initialize(
           dao.address,
           [signers[0].address], // signers[0] is listed
@@ -766,7 +766,7 @@ describe('Vocdoni Plugin', function () {
       });
 
       it('creates a proposal when unlisted accounts are allowed and have tokens', async () => {
-        vocdoniVotingSettings.onlyCommitteeProposalCreation = false;
+        vocdoniVotingSettings.onlyExecutionMultisigProposalCreation = false;
         vocdoniVotingSettings.minProposerVotingPower = 1;
         await setBalances([{receiver: signers[2].address, amount: 1}]);
 
@@ -813,7 +813,7 @@ describe('Vocdoni Plugin', function () {
               vocdoniProposalParams,
               dummyActions
             )
-        ).to.revertedWithCustomError(vocdoniVoting, 'OnlyCommittee');
+        ).to.revertedWithCustomError(vocdoniVoting, 'OnlyExecutionMultisig');
       });
     });
 
@@ -918,7 +918,7 @@ describe('Vocdoni Plugin', function () {
       vocdoniVotingSettings.minTallyApprovals = 1;
     });
 
-    it('reverts if not a committee member', async () => {
+    it('reverts if not a executionMultisig member', async () => {
       await vocdoniVoting.initialize(
         dao.address,
         [signers[0].address], // signers[0] is listed
@@ -935,7 +935,7 @@ describe('Vocdoni Plugin', function () {
       ).not.to.be.reverted;
 
       await expect(vocdoniVoting.connect(signers[1]).setTally(0, [[10, 0, 0]]))
-        .to.be.revertedWithCustomError(vocdoniVoting, 'OnlyCommittee')
+        .to.be.revertedWithCustomError(vocdoniVoting, 'OnlyExecutionMultisig')
         .withArgs(signers[1].address);
     });
 
@@ -1135,7 +1135,7 @@ describe('Vocdoni Plugin', function () {
       ).to.be.revertedWithCustomError(vocdoniVoting, 'TallyAlreadyApproved');
     });
 
-    it('resets the approval counter if tally is already set but changed by another committee member', async () => {
+    it('resets the approval counter if tally is already set but changed by another executionMultisig member', async () => {
       vocdoniProposalParams.expirationDate =
         (await ethers.provider.getBlock('latest')).timestamp + 1000;
       vocdoniVotingSettings.minTallyApprovals = 2;
@@ -1239,7 +1239,7 @@ describe('Vocdoni Plugin', function () {
       vocdoniVotingSettings.minTallyApprovals = 1;
     });
 
-    it('reverts if not a committee member', async () => {
+    it('reverts if not a executionMultisig member', async () => {
       vocdoniProposalParams.expirationDate =
         (await ethers.provider.getBlock('latest')).timestamp + 1000;
       await vocdoniVoting.initialize(
@@ -1263,7 +1263,7 @@ describe('Vocdoni Plugin', function () {
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
       await expect(vocdoniVoting.connect(signers[1]).approveTally(0, false))
-        .to.be.revertedWithCustomError(vocdoniVoting, 'OnlyCommittee')
+        .to.be.revertedWithCustomError(vocdoniVoting, 'OnlyExecutionMultisig')
         .withArgs(signers[1].address);
     });
 
@@ -1293,7 +1293,7 @@ describe('Vocdoni Plugin', function () {
       ).to.be.revertedWithCustomError(vocdoniVoting, 'InvalidTally');
     });
 
-    it('committee member can approve the tally only once if not changed', async () => {
+    it('executionMultisig member can approve the tally only once if not changed', async () => {
       vocdoniProposalParams.expirationDate =
         (await ethers.provider.getBlock('latest')).timestamp + 1000;
       vocdoniVotingSettings.minTallyApprovals = 2;
@@ -1332,7 +1332,7 @@ describe('Vocdoni Plugin', function () {
       expect(proposal.approvers.length).to.be.equal(2);
     });
 
-    it('committee member can approve the tally only once if changed', async () => {
+    it('executionMultisig member can approve the tally only once if changed', async () => {
       vocdoniProposalParams.expirationDate =
         (await ethers.provider.getBlock('latest')).timestamp + 1000;
       vocdoniVotingSettings.minTallyApprovals = 2;

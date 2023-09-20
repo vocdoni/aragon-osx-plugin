@@ -3,16 +3,16 @@ pragma solidity ^0.8.17;
 
 /// @title IVocdoniVoting
 /// @author Vocdoni
-/// @notice The Vocdoni off-chain voting contract interface for the OSX plugin.
-/// @notice The voting Proposal is managed off-chain on the Vocdoni blockchain.
+/// @notice The Vocdoni gasless voting contract interface for the OSX plugin.
+/// @notice The voting Proposal is managed gasless on the Vocdoni blockchain.
 interface IVocdoniVoting {
-    /// @notice Emitted when one or more committee members are added.
-    /// @param newMembers The addresses of the new committee members.
-    event CommitteeMembersAdded(address[] indexed newMembers);
+    /// @notice Emitted when one or more execution multisig members are added.
+    /// @param newMembers The addresses of the new execution multisig members.
+    event ExecutionMultisigMembersAdded(address[] indexed newMembers);
 
-    /// @notice Emitted when one or more committee member are removed.
-    /// @param removedMembers The addresses of the removed committee members.
-    event CommitteeMembersRemoved(address[] indexed removedMembers);
+    /// @notice Emitted when one or more execution multisig member are removed.
+    /// @param removedMembers The addresses of the removed execution multisig members.
+    event ExecutionMultisigMembersRemoved(address[] indexed removedMembers);
 
     /// @notice Emitted when the tally of a proposal is set.
     /// @param proposalId The ID of the proposal.
@@ -62,9 +62,9 @@ interface IVocdoniVoting {
     /// @param lastUpdate The block number of the last update.
     error PluginSettingsUpdatedTooRecently(uint64 lastUpdate);
 
-    /// @notice Thrown if the committee is updated too recently.
+    /// @notice Thrown if the execution multisig is updated too recently.
     /// @param lastUpdate The block number of the last update.
-    error CommitteeUpdatedTooRecently(uint64 lastUpdate);
+    error ExecutionMultisigUpdatedTooRecently(uint64 lastUpdate);
 
     /// @notice Thrown if the proposal is already executed.
     /// @param proposalId The ID of the proposal.
@@ -83,7 +83,7 @@ interface IVocdoniVoting {
     /// @param sender The sender.
     error TallyAlreadyApprovedBySender(address sender);
 
-    /// @notice Thrown if the proposal tally is not approved by enough committee members.
+    /// @notice Thrown if the proposal tally is not approved by enough execution multisig members.
     /// @param minApprovals The minimum number of approvals required.
     /// @param actualApprovals The actual number of approvals.
     error NotEnoughApprovals(uint16 minApprovals, uint16 actualApprovals);
@@ -102,9 +102,9 @@ interface IVocdoniVoting {
     /// @param required The required voting power
     error NotEnoughVotingPower(uint256 required);
 
-    /// @notice Thrown if the msg.sender is not a committee member
+    /// @notice Thrown if the msg.sender is not a execution multisig member
     /// @param sender The sender
-    error OnlyCommittee(address sender);
+    error OnlyExecutionMultisig(address sender);
 
     /// @notice Thrown if the support threshold is not reached
     /// @param currentSupport The current support
@@ -116,18 +116,18 @@ interface IVocdoniVoting {
     /// @param minParticipation The minimum participation
     error MinParticipationNotReached(uint256 currentParticipation, uint32 minParticipation);
 
-    /// @notice Adds new committee members.
-    /// @param _members The addresses of the new committee members.
-    function addCommitteeMembers(address[] calldata _members) external;
+    /// @notice Adds new execution multisig members.
+    /// @param _members The addresses of the new execution multisig members.
+    function addExecutionMultisigMembers(address[] calldata _members) external;
 
-    /// @notice Removes committee members.
-    /// @param _members The addresses of the committee members to remove.
-    function removeCommitteeMembers(address[] calldata _members) external;
+    /// @notice Removes execution multisig members.
+    /// @param _members The addresses of the execution multisig members to remove.
+    function removeExecutionMultisigMembers(address[] calldata _members) external;
 
-    /// @notice Returns whether an address is a committee member.
+    /// @notice Returns whether an address is a execution ultisig member.
     /// @param _member The address to check.
-    /// @return Whether the address is a committee member.
-    function isCommitteeMember(address _member) external view returns (bool);
+    /// @return Whether the address is a execution multisig member.
+    function isExecutionMultisigMember(address _member) external view returns (bool);
 
     /// @notice Sets the tally of a given proposal.
     /// @param _proposalId The ID of the proposal to set the tally of.
