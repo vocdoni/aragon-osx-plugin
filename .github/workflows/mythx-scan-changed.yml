@@ -138,7 +138,7 @@ jobs:
           SUMMARY=$'## MythX Analysis Summary\n* __Scan Mode__: ${{ inputs.mode }}\n* __Group ID__: ${{ needs.mythx.outputs.GROUP_ID }}\n* __Dashboard URL__: https://dashboard.mythx.io/#/console/analyses/groups/${{ needs.mythx.outputs.GROUP_ID }} '
           echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo ":bulb: > $scan_msg" >> $GITHUB_STEP_SUMMARY
+          echo "> :bulb: $scan_msg" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload MythX Report as Artifact
         uses: actions/upload-artifact@v3
