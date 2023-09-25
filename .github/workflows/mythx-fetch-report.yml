@@ -3,8 +3,8 @@ name: MythX fetch report
 on:
   workflow_call:
     inputs:
-      previous_group_id:
-        description: 'Previous MythX scan group ID'
+      previous_analysis_id:
+        description: 'Previous MythX scan analysis ID'
         required: true
         type: string
     secrets:
@@ -13,8 +13,8 @@ on:
         required: true
   workflow_dispatch:
     inputs:
-      previous_group_id:
-        description: 'Previous MythX scan group ID'
+      previous_analysis_id:
+        description: 'Previous MythX scan analysis ID'
         required: true
         type: string
 
@@ -23,7 +23,10 @@ jobs:
     permissions: read-all
     runs-on: ubuntu-latest
     outputs:
-      GROUP_ID: ${{ steps.analysis_info.outputs.GROUP_ID }}
+      PREVIOUS_GROUP_ID: ${{ steps.analysis_info.outputs.PREVIOUS_GROUP_ID }}
+      PREVIOUS_ANALYSIS_MODE: ${{ steps.analysis_info.outputs.PREVIOUS_ANALYSIS_MODE }}
+      PREVIOUS_SUBMITTED_AT: ${{ steps.analysis_info.outputs.PREVIOUS_SUBMITTED_AT }}
+      PREVIOUS_STATUS: ${{ steps.analysis_info.outputs.PREVIOUS_STATUS }}
       BRANCH_NAME: ${{ steps.myvars.outputs.BRANCH_NAME }}
       GIT_HASH_SHORT: ${{ steps.myvars.outputs.GIT_HASH_SHORT }}
       DATE_IN_SECS: ${{ steps.myvars.outputs.DATE_IN_SECS }}
@@ -48,39 +51,44 @@ jobs:
       - name: Install Python MythX CLI
         run: pip install mythx-cli
 
-      - name: Install deps
-        run: yarn
-
-      - name: Print MythX scan status
+      - name: Get MythX analysis details
+        id: analysis_info
         run: |
-          mythx \
-          --api-key ${{ secrets.MYTHX_API_KEY }} \
-          --format=simple \
-          --yes \
-          --config mythx.yml \
-          analysis $PREVIOUS_GROUP_ID
-        env:
-          PREVIOUS_GROUP_ID: ${{ inputs.previous_group_id }}
+          mythx --output=mythx-analysis-details.json --format=json-pretty --api-key ${{ secrets.MYTHX_API_KEY }} analysis status ${{ inputs.previous_analysis_id }}
+          previous_group_id=$(cat mythx-analysis-details.json | jq -r .group_id)
+          previous_analysis_mode=$(cat mythx-analysis-details.json | jq -r .analysis_mode)
+          previous_submitted_at=$(cat mythx-analysis-details.json | jq -r .submitted_at)
+          previous_status=$(cat mythx-analysis-details.json | jq -r .status)
+          echo "PREVIOUS_GROUP_ID=$previous_group_id" >> $GITHUB_OUTPUT
+          echo "PREVIOUS_ANALYSIS_MODE=$previous_analysis_mode" >> $GITHUB_OUTPUT
+          echo "PREVIOUS_SUBMITTED_AT=$previous_submitted_at" >> $GITHUB_OUTPUT
+          echo "PREVIOUS_STATUS=$previous_status" >> $GITHUB_OUTPUT
+          ls -la
+          cat mythx-analysis-details.json
 
       - name: Fetch MythX Report
+        if: ${{ steps.analysis_info.outputs.PREVIOUS_STATUS }} == "Finished"
         run: |
           mythx \
-          --output=mythx-report-${{ steps.myvars.outputs.GIT_HASH_SHORT }}.html \
+          --output=mythx-report-${{ steps.myvars.outputs.DATE_IN_SECS }}.html \
           --api-key ${{ secrets.MYTHX_API_KEY }} \
-          render $PREVIOUS_GROUP_ID
-        env:
-          PREVIOUS_GROUP_ID: ${{ inputs.previous_group_id }}
+          render ${{ steps.analysis_info.outputs.PREVIOUS_GROUP_ID }}
+          ls -la
 
       - name: Write info to Summary
         run: |
-          SUMMARY=$'## MythX Analysis Summary\n* __Group ID__: ${{ inputs.previous_group_id }}\n* __Dashboard URL__: https://dashboard.mythx.io/#/console/analyses/groups/${{ input.inputs.previous_group_id }} '
-          echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+          SUMMARY=$'\n\n* __Dashboard URL__: https://dashboard.mythx.io/#/console/analyses/groups/${{ steps.analysis_info.outputs.PREVIOUS_GROUP_ID }} '
+          echo "## MythX Analysis Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          scan_msg="Download the report from Github Artifact but wait before for ~15 mins or ~45 mins for Standard or Deep scan respectively."
-          echo "> :bulb: $scan_msg" >> $GITHUB_STEP_SUMMARY
+          echo "* __Analysis ID__: ${{ inputs.previous_analysis_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "* __Analysis mode__: ${{ steps.analysis_info.outputs.PREVIOUS_ANALYSIS_MODE }}" >> $GITHUB_STEP_SUMMARY
+          echo "* __Submitted at__: ${{ steps.analysis_info.outputs.PREVIOUS_SUBMITTED_AT }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          scan_msg="Download the report <code>mythx-report-${{ steps.myvars.outputs.DATE_IN_SECS }}</code> from Github Artifact section."
+          echo "> :rocket: $scan_msg" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload MythX Report as Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: mythx-${{ steps.myvars.outputs.GIT_HASH_SHORT }}-report
-          path: mythx-report-${{ steps.myvars.outputs.GIT_HASH_SHORT }}.html
+          name: mythx-report-${{ steps.myvars.outputs.DATE_IN_SECS }}
+          path: mythx-report-${{ steps.myvars.outputs.DATE_IN_SECS }}.html
