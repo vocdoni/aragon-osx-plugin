@@ -32,6 +32,7 @@ jobs:
     permissions: read-all
     runs-on: ubuntu-latest
     outputs:
+      ANALYSIS_ID: ${{ steps.analysis_info.outputs.ANALYSIS_ID }}
       GROUP_ID: ${{ steps.analysis_info.outputs.GROUP_ID }}
       BRANCH_NAME: ${{ steps.myvars.outputs.BRANCH_NAME }}
       GIT_HASH_SHORT: ${{ steps.myvars.outputs.GIT_HASH_SHORT }}
@@ -95,6 +96,7 @@ jobs:
         run: |
           id=$(cat id | head -1)
           group_id=$(mythx --format=json --api-key ${{ secrets.MYTHX_API_KEY }} analysis status $id | jq -r .group_id)
+          echo "ANALYSIS_ID=$id" >> $GITHUB_OUTPUT
           echo "GROUP_ID=$group_id" >> $GITHUB_OUTPUT
           ls -la
 
@@ -102,7 +104,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: success() || failure()
         with:
-          name: mythx-${{ steps.myvars.outputs.GIT_HASH_SHORT }}-analysis-id
+          name: mythx-analysisid-${{ steps.myvars.outputs.GIT_HASH_SHORT }}
           path: id
 
   report:
@@ -119,7 +121,11 @@ jobs:
 
       - name: Fetch MythX Report ( mode=${{ inputs.mode }} )
         if: ${{ inputs.mode == 'quick' }}
-        run: mythx --output=mythx-report-${{ needs.mythx.outputs.GIT_HASH_SHORT }}.html --api-key ${{ secrets.MYTHX_API_KEY }} render ${{ needs.mythx.outputs.GROUP_ID }}
+        run: |
+          mythx \
+          --output=mythx-report-${{ needs.mythx.outputs.GIT_HASH_SHORT }}.html \
+          --api-key ${{ secrets.MYTHX_API_KEY }} \
+          render ${{ needs.mythx.outputs.GROUP_ID }}
 
       - name: Write info to Summary
         run: |
@@ -129,7 +135,7 @@ jobs:
           else
             scan_msg="Download the report using the Mythx Dashboard URL but wait for ~15 mins or ~45 mins for Standard or Deep scan respectively."
           fi
-          SUMMARY=$'## MythX Analysis Summary\n* __Scan Mode__: ${{ inputs.mode }}\n* __Group ID__: ${{ needs.mythx.outputs.GROUP_ID }}\n* __Dashboard URL__: https://dashboard.mythx.io/#/console/analyses/groups/${{ needs.mythx.outputs.GROUP_ID }} '
+          SUMMARY=$'## MythX Analysis Summary\n* __Scan Mode__: ${{ inputs.mode }}\n* __Analysis ID__: ${{ needs.mythx.outputs.ANALYSIS_ID }}\n* __Group ID__: ${{ needs.mythx.outputs.GROUP_ID }}\n* __Dashboard URL__: https://dashboard.mythx.io/#/console/analyses/groups/${{ needs.mythx.outputs.GROUP_ID }} '
           echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> :bulb: $scan_msg" >> $GITHUB_STEP_SUMMARY
@@ -138,7 +144,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ inputs.mode == 'quick' }}
         with:
-          name: mythx-${{ needs.mythx.outputs.GIT_HASH_SHORT }}-report
+          name: mythx-report-${{ needs.mythx.outputs.GIT_HASH_SHORT }}
           path: mythx-report-${{ needs.mythx.outputs.GIT_HASH_SHORT }}.html
 
   comment:
