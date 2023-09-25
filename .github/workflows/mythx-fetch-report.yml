@@ -1,0 +1,86 @@
+name: MythX fetch report
+
+on:
+  workflow_call:
+    inputs:
+      previous_group_id:
+        description: 'Previous MythX scan group ID'
+        required: true
+        type: string
+    secrets:
+      MYTHX_API_KEY:
+        description: 'MythX API Token'
+        required: true
+  workflow_dispatch:
+    inputs:
+      previous_group_id:
+        description: 'Previous MythX scan group ID'
+        required: true
+        type: string
+
+jobs:
+  fetch:
+    permissions: read-all
+    runs-on: ubuntu-latest
+    outputs:
+      GROUP_ID: ${{ steps.analysis_info.outputs.GROUP_ID }}
+      BRANCH_NAME: ${{ steps.myvars.outputs.BRANCH_NAME }}
+      GIT_HASH_SHORT: ${{ steps.myvars.outputs.GIT_HASH_SHORT }}
+      DATE_IN_SECS: ${{ steps.myvars.outputs.DATE_IN_SECS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set myvars
+        id: myvars
+        run: |
+          branchname=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-' )
+          dateinsecs=$(date +%s)
+          githashshort=$(git rev-parse --short HEAD)
+          echo "BRANCH_NAME=$branchname" >> $GITHUB_OUTPUT
+          echo "GIT_HASH_SHORT=$githashshort" >> $GITHUB_OUTPUT
+          echo "DATE_IN_SECS=$dateinsecs" >> $GITHUB_OUTPUT
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Python MythX CLI
+        run: pip install mythx-cli
+
+      - name: Install deps
+        run: yarn
+
+      - name: Print MythX scan status
+        run: |
+          mythx \
+          --api-key ${{ secrets.MYTHX_API_KEY }} \
+          --format=simple \
+          --yes \
+          --config mythx.yml \
+          analysis $PREVIOUS_GROUP_ID
+        env:
+          PREVIOUS_GROUP_ID: ${{ inputs.previous_group_id }}
+
+      - name: Fetch MythX Report
+        run: |
+          mythx \
+          --output=mythx-report-${{ steps.myvars.outputs.GIT_HASH_SHORT }}.html \
+          --api-key ${{ secrets.MYTHX_API_KEY }} \
+          render $PREVIOUS_GROUP_ID
+        env:
+          PREVIOUS_GROUP_ID: ${{ inputs.previous_group_id }}
+
+      - name: Write info to Summary
+        run: |
+          SUMMARY=$'## MythX Analysis Summary\n* __Group ID__: ${{ inputs.previous_group_id }}\n* __Dashboard URL__: https://dashboard.mythx.io/#/console/analyses/groups/${{ inputs.previous_group_id }} '
+          echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          scan_msg="Download the report from Github Artifact but wait before for ~15 mins or ~45 mins for Standard or Deep scan respectively."
+          echo "> :bulb: $scan_msg" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload MythX Report as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mythx-${{ steps.myvars.outputs.GIT_HASH_SHORT }}-report
+          path: mythx-report-${{ steps.myvars.outputs.GIT_HASH_SHORT }}.html
