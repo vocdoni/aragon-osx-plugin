@@ -48,7 +48,7 @@ contract VocdoniVoting is
     /// @param minTallyApprovals The minimum number of approvals required for a tally to be considered accepted.
     /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
     /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
-    /// @param minDuration The minimum duration of a propsal.
+    /// @param minDuration The minimum duration of a proposal.
     /// @param expirationTime The maximum expiration time of a proposal. Proposal cannot be executed after this time.
     /// @param daoTokenAddress The address of the DAO token.
     /// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
