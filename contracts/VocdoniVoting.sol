@@ -316,25 +316,23 @@ contract VocdoniVoting is
         public
         view
         returns (
-            bool,
-            address[] memory,
-            bytes32,
-            ProposalParameters memory,
-            uint256,
-            uint256[][] memory,
-            IDAO.Action[] memory
+            bool executed,
+            address[] memory approvers,
+            bytes32 vochainProposalId,
+            ProposalParameters memory parameters,
+            uint256 allowFailureMap,
+            uint256[][] memory tally,
+            IDAO.Action[] memory actions
         )
     {
         Proposal storage proposal = proposals[_proposalId];
-        return (
-            proposal.executed,
-            proposal.approvers,
-            proposal.vochainProposalId,
-            proposal.parameters,
-            proposal.allowFailureMap,
-            proposal.tally,
-            proposal.actions
-        );
+        executed = proposal.executed;
+        approvers = proposal.approvers;
+        vochainProposalId = proposal.vochainProposalId;
+        parameters = proposal.parameters;
+        allowFailureMap = proposal.allowFailureMap;
+        tally = proposal.tally;
+        actions = proposal.actions;
     }
 
     /// @notice Internal function for creating a proposal.
@@ -418,7 +416,7 @@ contract VocdoniVoting is
     /// @notice Internal function for setting the tally of a given proposal.
     /// @param _proposalId The ID of the proposal to set the tally of.
     /// @param _tally The tally to set.
-    /// @dev The caller must be a executionMultisig member if the ONLY_EXECUTION_MULTISIG_SET_TALLY flag is set.
+    /// @dev The caller must be a executionMultisig member.
     function _setTally(uint256 _proposalId, uint256[][] memory _tally) internal {
         _guardExecutionMultisig();
         _guardPluginSettings();
@@ -545,7 +543,7 @@ contract VocdoniVoting is
 
     /// @notice Internal function to check if a proposal is on the tally phase.
     /// @param _proposal The proposal to check
-    function _isProposalOnTallyPhase(Proposal storage _proposal) internal view returns (bool) {
+    function _isProposalOnTallyPhase(Proposal memory _proposal) internal view returns (bool) {
         uint64 currentBlockTimestamp = uint64(block.timestamp);
         /// [... startDate ............ endDate ............ expirationDate ...]
         /// [............. Voting phase ....... Tally phase ...................]
@@ -562,7 +560,7 @@ contract VocdoniVoting is
     /// @notice Internal function to check the tally and execute a proposal if the tally
     ///         number of YES votes is greater than the tally number of NO votes.
     function _checkTallyAndExecute(uint256 _proposalId) internal {
-        Proposal storage proposal = proposals[_proposalId];
+        Proposal memory proposal = proposals[_proposalId];
 
         if (proposal.executed) {
             revert ProposalAlreadyExecuted({proposalId: _proposalId});
@@ -599,7 +597,7 @@ contract VocdoniVoting is
             });
         }
 
-        proposal.executed = true;
+        proposals[_proposalId].executed = true;
         _executeProposal(dao(), _proposalId, proposal.actions, proposal.allowFailureMap);
     }
 
@@ -653,8 +651,7 @@ contract VocdoniVoting is
     /// @param _proposalId The ID of the proposal.
     /// @return Whether the msg.sender has approved the proposal tally.
     function hasApprovedTally(uint256 _proposalId, address _member) public view returns (bool) {
-        Proposal storage proposal = proposals[_proposalId];
-        return _hasApprovedTally(proposal, _member);
+        return _hasApprovedTally(proposals[_proposalId], _member);
     }
 
     function _hasApprovedTally(
