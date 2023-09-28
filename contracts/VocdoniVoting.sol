@@ -316,23 +316,25 @@ contract VocdoniVoting is
         public
         view
         returns (
-            bool executed,
-            address[] memory approvers,
-            bytes32 vochainProposalId,
-            ProposalParameters memory parameters,
-            uint256 allowFailureMap,
-            uint256[][] memory tally,
-            IDAO.Action[] memory actions
+            bool,
+            address[] memory,
+            bytes32,
+            ProposalParameters memory,
+            uint256,
+            uint256[][] memory,
+            IDAO.Action[] memory
         )
     {
         Proposal storage proposal = proposals[_proposalId];
-        executed = proposal.executed;
-        approvers = proposal.approvers;
-        vochainProposalId = proposal.vochainProposalId;
-        parameters = proposal.parameters;
-        allowFailureMap = proposal.allowFailureMap;
-        tally = proposal.tally;
-        actions = proposal.actions;
+        return (
+            proposal.executed,
+            proposal.approvers,
+            proposal.vochainProposalId,
+            proposal.parameters,
+            proposal.allowFailureMap,
+            proposal.tally,
+            proposal.actions
+        );
     }
 
     /// @notice Internal function for creating a proposal.
@@ -509,7 +511,7 @@ contract VocdoniVoting is
         }
 
         // if executionMultisig changed since proposal creation, the proposal approvals of the previous executionMultisig members are not valid
-        if (proposal.parameters.securityBlock <= lastExecutionMultisigChange) {
+        if (proposal.parameters.securityBlock < lastExecutionMultisigChange) {
             address[] memory newApprovers = new address[](0);
             // newApprovers are the oldApprovers list without the non executionMultisig members at the current block
             uint16 newApproversCount = 0;
