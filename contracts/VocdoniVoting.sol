@@ -196,7 +196,7 @@ contract VocdoniVoting is
         }
 
         if (lastExecutionMultisigChange == uint64(block.number)) {
-            revert ExecutionMultisigUpdatedTooRecently({lastUpdate: lastPluginSettingsChange});
+            revert ExecutionMultisigUpdatedTooRecently({lastUpdate: lastExecutionMultisigChange});
         }
 
         _addAddresses(_members);
@@ -224,7 +224,7 @@ contract VocdoniVoting is
         }
 
         if (lastExecutionMultisigChange == uint64(block.number)) {
-            revert ExecutionMultisigUpdatedTooRecently({lastUpdate: lastPluginSettingsChange});
+            revert ExecutionMultisigUpdatedTooRecently({lastUpdate: lastExecutionMultisigChange});
         }
 
         _removeAddresses(_members);
