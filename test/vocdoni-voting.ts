@@ -1569,6 +1569,40 @@ describe('Vocdoni Plugin', function () {
       );
     });
 
+    // reverts if already executed
+    it('reverts if already executed', async () => {
+      vocdoniVotingSettings.minTallyApprovals = 1;
+      vocdoniVotingSettings.supportThreshold = 0;
+      vocdoniProposalParams.expirationDate =
+        (await ethers.provider.getBlock('latest')).timestamp + 1000;
+      await vocdoniVoting.initialize(
+        dao.address,
+        [signers[0].address], // signers[0] is listed
+        vocdoniVotingSettings
+      );
+      await expect(
+        vocdoniVoting
+          .connect(signers[0])
+          .createProposal(
+            ethers.utils.randomBytes(32),
+            0,
+            vocdoniProposalParams,
+            dummyActions
+          )
+      ).to.not.be.reverted;
+
+      await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
+        .to.not.be.reverted;
+
+      await expect(
+        vocdoniVoting.connect(signers[0]).executeProposal(0)
+      ).to.not.be.reverted;
+
+      await expect(
+        vocdoniVoting.connect(signers[0]).executeProposal(0)
+      ).to.be.revertedWithCustomError(vocdoniVoting, 'ProposalAlreadyExecuted');
+    });
+
     it('emit an event if proposal executed', async () => {
       vocdoniProposalParams.expirationDate =
         (await ethers.provider.getBlock('latest')).timestamp + 1000;

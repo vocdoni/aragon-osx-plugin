@@ -428,6 +428,10 @@ contract VocdoniVoting is
 
         Proposal storage proposal = proposals[_proposalId];
 
+        if (proposal.executed) {
+            revert ProposalAlreadyExecuted({proposalId: _proposalId});
+        }
+
         if (!_isProposalOnTallyPhase(proposal)) {
             revert ProposalNotInTallyPhase({
                 endDate: proposal.parameters.endDate,
@@ -546,8 +550,7 @@ contract VocdoniVoting is
         if (
             _proposal.parameters.startDate < currentBlockTimestamp &&
             _proposal.parameters.endDate <= currentBlockTimestamp &&
-            _proposal.parameters.expirationDate > currentBlockTimestamp &&
-            !_proposal.executed
+            _proposal.parameters.expirationDate > currentBlockTimestamp
         ) {
             return true;
         }
@@ -558,6 +561,10 @@ contract VocdoniVoting is
     ///         number of YES votes is greater than the tally number of NO votes.
     function _checkTallyAndExecute(uint256 _proposalId) internal {
         Proposal storage proposal = proposals[_proposalId];
+
+        if (proposal.executed) {
+            revert ProposalAlreadyExecuted({proposalId: _proposalId});
+        }
 
         // also checks that proposal is in tally phase, as the tally cannot be set otherwise
         if (proposal.tally.length == 0) {
