@@ -104,11 +104,21 @@ export function toBytes32(num: number): string {
 export type VocdoniVotingSettings = {
   onlyExecutionMultisigProposalCreation: boolean;
   minTallyApprovals: number;
-  minDuration: number;
-  expirationTime: number;
-  minParticipation: BigNumber;
-  supportThreshold: BigNumber;
+  minParticipation: number;
+  supportThreshold: number;
+  minVoteDuration: number;
+  minTallyDuration: number;
   daoTokenAddress: string;
-  minProposerVotingPower: number;
-  censusStrategy: string;
+  minProposerVotingPower: BigNumber;
+  censusStrategyURI: string;
+};
+
+export type VocdoniProposalParams = {
+  securityBlock: number;
+  startDate: number;
+  voteEndDate: number;
+  tallyEndDate: number;
+  totalVotingPower: BigNumber;
+  censusURI: string;
+  censusRoot: string;
 };

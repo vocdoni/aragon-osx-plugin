@@ -38,13 +38,13 @@
             },
             {
               "internalType": "uint64",
-              "name": "minDuration",
+              "name": "minVoteDuration",
               "type": "uint64",
               "description": "The minimal duration of the tally phase of a voting process"
             },
             {
               "internalType": "uint64",
-              "name": "expirationTime",
+              "name": "minTallyDuration",
               "type": "uint64",
               "description": "The expiration time of the voting process. Cannot be executed afterwards"
             },
@@ -62,7 +62,7 @@
             },
             {
               "internalType": "string",
-              "name": "censusStrategy",
+              "name": "censusStrategyURI",
               "type": "string",
               "description": "The census strategy to be used for the voting process"
             }
@@ -76,7 +76,7 @@
           "components": [
             {
               "internalType": "address",
-              "name": "token",
+              "name": "addr",
               "type": "address",
               "description": "The token address. If this is `address(0)`, a new `GovernanceERC20` token is deployed. If not, the existing token is wrapped as an `GovernanceWrappedERC20`."
             },
@@ -119,16 +119,7 @@
           "description": "The token mint settings struct containing the `receivers` and `amounts`."
         }
       ],
-      "prepareUpdate": {
-        "1": {
-          "description": "No input is required for the update.",
-          "inputs": []
-        },
-        "2": {
-          "description": "No input is required for the update.",
-          "inputs": []
-        }
-      },
+      "prepareUpdate": {},
       "prepareUninstallation": {
         "description": "No input is required for the uninstallation.",
         "inputs": []

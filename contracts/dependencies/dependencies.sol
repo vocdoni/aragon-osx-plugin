@@ -22,68 +22,6 @@ import {ENSRegistry} from "@ensdomains/ens-contracts/contracts/registry/ENSRegis
 import {FIFSRegistrar} from "@ensdomains/ens-contracts/contracts/registry/FIFSRegistrar.sol";
 import {PublicResolver} from "@ensdomains/ens-contracts/contracts/resolvers/PublicResolver.sol";
 
-contract InterfaceBasedRegistryMock is InterfaceBasedRegistry {
-    bytes32 public constant REGISTER_PERMISSION_ID = keccak256("REGISTER_PERMISSION");
-
-    event Registered(address);
-
-    function initialize(IDAO _dao, bytes4 targetInterface) external initializer {
-        __InterfaceBasedRegistry_init(_dao, targetInterface);
-    }
-
-    function register(address registrant) external auth(REGISTER_PERMISSION_ID) {
-        _register(registrant);
-
-        emit Registered(registrant);
-    }
-}
-
-contract PluginUUPSUpgradeableV1Mock is PluginUUPSUpgradeable {
-    uint256 public state1;
-
-    function initialize(IDAO _dao) external initializer {
-        __PluginUUPSUpgradeable_init(_dao);
-        state1 = 1;
-    }
-}
-
-contract PluginUUPSUpgradeableV2Mock is PluginUUPSUpgradeable {
-    uint256 public state1;
-    uint256 public state2;
-
-    function initialize(IDAO _dao) external reinitializer(2) {
-        __PluginUUPSUpgradeable_init(_dao);
-        state1 = 1;
-        state2 = 2;
-    }
-
-    function initializeV1toV2() external reinitializer(2) {
-        state2 = 2;
-    }
-}
-
-contract PluginUUPSUpgradeableV3Mock is PluginUUPSUpgradeable {
-    uint256 public state1;
-    uint256 public state2;
-    uint256 public state3;
-
-    function initialize(IDAO _dao) external reinitializer(3) {
-        __PluginUUPSUpgradeable_init(_dao);
-        state1 = 1;
-        state2 = 2;
-        state3 = 3;
-    }
-
-    function initializeV1toV3() external reinitializer(3) {
-        state2 = 2;
-        state3 = 3;
-    }
-
-    function initializeV2toV3() external reinitializer(3) {
-        state3 = 3;
-    }
-}
-
 contract GovernanceERC20Mock is GovernanceERC20 {
     constructor(
         IDAO _dao,

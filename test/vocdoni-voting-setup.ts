@@ -21,6 +21,7 @@ import metadata from '../contracts/build-metadata.json';
 import {VocdoniVotingSettings, pctToRatio, ONE_HOUR} from './utils/voting';
 import {vocdoniVotingInterface} from './vocdoni-voting';
 import {getNamedTypesFromMetadata} from './utils/metadata';
+import { BigNumber } from 'ethers';
 
 let defaultData: any;
 let defaultVocdoniVotingSettings: VocdoniVotingSettings;
@@ -68,13 +69,13 @@ describe('VocdoniVotingSetup', function () {
     defaultVocdoniVotingSettings = {
       onlyExecutionMultisigProposalCreation: true,
       minTallyApprovals: 1,
-      minDuration: ONE_HOUR,
-      expirationTime: ONE_HOUR,
-      minParticipation: pctToRatio(20),
-      supportThreshold: pctToRatio(50),
+      minParticipation: 20,
+      supportThreshold: 50,
+      minVoteDuration: ONE_HOUR,
+      minTallyDuration: ONE_HOUR,
       daoTokenAddress: AddressZero,
-      minProposerVotingPower: 0,
-      censusStrategy: '',
+      minProposerVotingPower: BigNumber.from(10),
+      censusStrategyURI: '',
     };
 
     const emptyName = '';
