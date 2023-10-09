@@ -2,7 +2,7 @@
 
 This repository contains the smart contracts required for allowing any Aragon DAO to use the Vocdoni voting protocol as the DAO voting backend.
 
-An Aragon DAO can install the Vocdoni voting plugin to enable its members to use the Vocdoni voting protocol.
+An Aragon DAO can install this plugin to enable its members to use the Vocdoni voting protocol.
 
 The voting processes are held on the Vocdoni blockchain thus giving the DAO members the ability to:
 
@@ -31,25 +31,25 @@ The plugin is configured with the following parameters:
 
 ```solidity
 /// @notice A container for the Vocdoni voting plugin settings
-/// @param onlyExecutionMultisigProposalCreation If true, only execution multisig members can create proposals.
+/// @param onlyExecutionMultisigProposalCreation If true, only executionMultisig members can create proposals.
 /// @param minTallyApprovals The minimum number of approvals required for the tally to be considered valid.
 /// @param minParticipation The minimum participation value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
 /// @param supportThreshold The support threshold value. Its value has to be in the interval [0, 10^6] defined by `RATIO_BASE = 10**6`.
-/// @param minDuration The minimum duration of a proposal.
-/// @param expirationTime The maximum expiration time of a proposal. Proposal cannot be executed after this time.
+/// @param minVoteDuration The minimum duration of the vote phase of a proposal.
+/// @param minTallyDuration The minimum duration of the tally phase of a proposal.
 /// @param daoTokenAddress The address of the DAO token.
 /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
-/// @param censusStrategy The predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
+/// @param censusStrategyURI The URI containing he census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
 struct PluginSettings {
-  bool onlyExecutionMultisigProposalCreation;
-  uint16 minTallyApprovals;
-  uint32 minParticipation;
-  uint32 supportThreshold;
-  uint64 minDuration;
-  uint64 expirationTime;
-  address daoTokenAddress;
-  uint256 minProposerVotingPower;
-  string censusStrategy;
+    bool onlyExecutionMultisigProposalCreation;
+    uint16 minTallyApprovals;
+    uint32 minParticipation;
+    uint32 supportThreshold;
+    uint64 minVoteDuration;
+    uint64 minTallyDuration;
+    address daoTokenAddress;
+    uint256 minProposerVotingPower;
+    string censusStrategyURI;
 }
 ```
 
@@ -69,7 +69,7 @@ There is also the execution multisig list. This list can be modified if the chan
 The functions to modify the execution multisig members are:
 
 ```solidity
-function addExecutionMultisigMembers(address[] calldata _members) external override auth (UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) { ... }
+function addExecutionMultisigMembers(address[] calldata _members) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) { ... }
 
 function removeExecutionMultisigMembers(address[] calldata _members) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) { ... }
 ```
@@ -85,20 +85,42 @@ A proposal is defined as:
 /// @param executed Whether the proposal is executed or not.
 /// @param vochainProposalId The ID of the proposal in the Vochain.
 /// @param allowFailureMap A bitmap allowing the proposal to succeed, even if individual actions might revert. If the bit at index `i` is 1,
-//         the proposal succeeds even if the `i`th action reverts. A failure map value of 0 requires every action to not revert.
+//         the proposal succeeds even if the i th action reverts. A failure map value of 0 requires every action to not revert.
 /// @param parameters The parameters of the proposal.
 /// @param tally The tally of the proposal.
 /// @dev tally only supports [[Yes, No, Abstain]] schema in this order. i.e [[10, 5, 2]] means 10 Yes, 5 No, 2 Abstain.
 /// @param approvers The approvers of the tally.
 /// @param actions The actions to be executed when the proposal passes.
 struct Proposal {
-  bool executed;
-  bytes32 vochainProposalId;
-  uint256 allowFailureMap;
-  ProposalParameters parameters;
-  uint256[][] tally;
-  address[] approvers;
-  IDAO.Action[] actions;
+    bool executed;
+    bytes32 vochainProposalId;
+    uint256 allowFailureMap;
+    ProposalParameters parameters;
+    uint256[][] tally;
+    address[] approvers;
+    IDAO.Action[] actions;
+}
+```
+
+An the proposal parameters are defined as:
+
+```solidity
+/// @notice A container for the proposal parameters.
+/// @param securityBlock Block number used for limiting contract usage when plugin settings are updated
+/// @param startDate The timestamp when the proposal starts.
+/// @param voteEndDate The timestamp when the proposal ends. At this point the tally can be set.
+/// @param tallyEndDate The timestamp when the proposal expires. Proposal can't be executed after.
+/// @param totalVotingPower The total voting power of the proposal.
+/// @param censusURI The URI of the census.
+/// @param censusRoot The root of the census.
+struct ProposalParameters {
+    uint64 securityBlock;
+    uint64 startDate;
+    uint64 voteEndDate;
+    uint64 tallyEndDate;
+    uint256 totalVotingPower;
+    string censusURI;
+    string censusRoot;
 }
 ```
 

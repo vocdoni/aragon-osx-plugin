@@ -33,15 +33,15 @@ interface IVocdoniVoting {
     /// @param actual The actual value.
     error MinApprovalsOutOfBounds(uint16 limit, uint16 actual);
 
-    /// @notice Thrown if the minimal duration value is out of bounds (less than one hour or greater than 1 year).
+    /// @notice Thrown if the vote phase duration is out of bounds (more than 1 year or less than 1 hour).
     /// @param limit The limit value.
     /// @param actual The actual value.
-    error MinDurationOutOfBounds(uint64 limit, uint64 actual);
+    error VoteDurationOutOfBounds(uint64 limit, uint64 actual);
 
-    /// @notice Trown if the maximum proposal expiration time is out of bounds (more than 1 year).
+    /// @notice Trown if the tally phase duration is out of bounds (more than 1 year or less than 1 hour).
     /// @param limit The limit value.
     /// @param actual The actual value.
-    error ExpirationTimeOutOfBounds(uint64 limit, uint64 actual);
+    error TallyDurationOutOfBounds(uint64 limit, uint64 actual);
 
     /// @notice Thrown if the start date is invalid.
     /// @param limit The limit value.
@@ -51,12 +51,12 @@ interface IVocdoniVoting {
     /// @notice Thrown if the end date is invalid.
     /// @param limit The limit value.
     /// @param actual The actual value.
-    error InvalidEndDate(uint64 limit, uint64 actual);
+    error InvalidVoteEndDate(uint64 limit, uint64 actual);
 
-    /// @notice Thrown if the expiration date is invalid.
-    /// @param limit The expiration date.
+    /// @notice Thrown if the tally end date is invalid.
+    /// @param limit The tally end date.
     /// @param actual The actual value.
-    error InvalidExpirationDate(uint64 limit, uint64 actual);
+    error InvalidTallyEndDate(uint64 limit, uint64 actual);
 
     /// @notice Thrown if the plugin settings are updated too recently.
     /// @param lastUpdate The block number of the last update.
@@ -92,11 +92,11 @@ interface IVocdoniVoting {
     /// @param addr The address
     error InvalidAddress(address addr);
 
-    /// @notice Thrown if the prosal is not in the tally phase
-    /// @param endDate The end date of the proposal
-    /// @param expirationDate The expiration date of the proposal
+    /// @notice Thrown if the proposal is not in the tally phase
+    /// @param voteEndDate The end date of the proposal
+    /// @param tallyEndDate The tally end date of the proposal
     /// @param currentTimestamp The current timestamp
-    error ProposalNotInTallyPhase(uint64 endDate, uint64 expirationDate, uint256 currentTimestamp);
+    error ProposalNotInTallyPhase(uint64 voteEndDate, uint64 tallyEndDate, uint256 currentTimestamp);
 
     /// @notice Thrown if the msg.sender does not have enough voting power
     /// @param required The required voting power
@@ -112,9 +112,17 @@ interface IVocdoniVoting {
     error SupportThresholdNotReached(uint256 currentSupport, uint32 supportThreshold);
 
     /// @notice Thrown if the minimum participation is not reached
-    /// @param currentParticipation The current participation
-    /// @param minParticipation The minimum participation
-    error MinParticipationNotReached(uint256 currentParticipation, uint32 minParticipation);
+    /// @param currentVotingPower The current voting power
+    /// @param minVotingPower The minimum voting power to reach
+    error MinParticipationNotReached(uint256 currentVotingPower, uint256 minVotingPower);
+
+    /// @notice Thrown if the total voting power is invalid
+    /// @param totalVotingPower The total voting power
+    error InvalidTotalVotingPower(uint256 totalVotingPower);
+
+    /// @notice Thrown if invalid list length
+    /// @param length The actual length
+    error InvalidListLength(uint256 length);
 
     /// @notice Adds new execution multisig members.
     /// @param _members The addresses of the new execution multisig members.
@@ -136,6 +144,7 @@ interface IVocdoniVoting {
 
     /// @notice Approves a proposal tally.
     /// @param _proposalId The ID of the proposal to approve.
+    /// @param _tryExecution Whether to try to execute the proposal if the tally is approved.
     function approveTally(uint256 _proposalId, bool _tryExecution) external;
 
     /// @notice Executes a proposal.

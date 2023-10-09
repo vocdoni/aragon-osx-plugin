@@ -6,15 +6,15 @@ import {IDAO} from "@aragon/osx/core/dao/IDAO.sol";
 
 /// @title IVocdoniProposal
 /// @notice An interface to be implemented by DAO plugins that create and execute gasless proposals.
-/// @dev Slighly modified from the original Aragon OSx IProposal interface.
+/// @dev Slightly modified from the original Aragon OSx IProposal interface.
 interface IVocdoniProposal {
     /// @notice Emitted when a proposal is created.
     /// @param proposalId The ID of the proposal.
     /// @param vochainProposalId The ID of the proposal in the Vochain.
     /// @param creator  The creator of the proposal.
     /// @param startDate The start date of the proposal in seconds.
-    /// @param endDate The end date of the proposal in seconds.
-    /// @param expirationDate The expiration date of the proposal in seconds.
+    /// @param voteEndDate The vote end date of the proposal in seconds.
+    /// @param tallyEndDate The tally end date of the proposal in seconds.
     /// @param actions The actions that will be executed if the proposal passes.
     /// @param allowFailureMap A bitmap allowing the proposal to succeed, even if individual actions might revert. If the bit at index `i` is 1, the proposal succeeds even if the `i`th action reverts. A failure map value of 0 requires every action to not revert.
     event ProposalCreated(
@@ -22,8 +22,8 @@ interface IVocdoniProposal {
         bytes32 indexed vochainProposalId,
         address indexed creator,
         uint64 startDate,
-        uint64 endDate,
-        uint64 expirationDate,
+        uint64 voteEndDate,
+        uint64 tallyEndDate,
         IDAO.Action[] actions,
         uint256 allowFailureMap
     );

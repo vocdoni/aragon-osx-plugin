@@ -141,11 +141,11 @@ contract VocdoniVotingSetup is PluginSetup {
         // Prepare and Deploy the plugin proxy.
         plugin = createERC1967Proxy(
             address(vocdoniVoting),
-            abi.encodeWithSelector(
-                VocdoniVoting.initialize.selector,
-                _dao,
+            abi.encodeCall(
+                VocdoniVoting.initialize,
+                (IDAO(_dao),
                 executionMultisig,
-                pluginSettings
+                pluginSettings)
             )
         );
 
@@ -295,7 +295,7 @@ contract VocdoniVotingSetup is PluginSetup {
     /// @param token The token address
     function _isERC20(address token) private view returns (bool) {
         (bool success, bytes memory data) = token.staticcall(
-            abi.encodeWithSelector(IERC20Upgradeable.balanceOf.selector, address(this))
+            abi.encodeCall(IERC20Upgradeable.balanceOf, (address(this)))
         );
         return success && data.length == 0x20;
     }
