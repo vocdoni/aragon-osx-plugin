@@ -15,11 +15,6 @@ interface IVocdoniVoting {
     /// @param proposalId The ID of the proposal.
     event TallyApproval(uint256 indexed proposalId, address indexed approver);
 
-    /// @notice Thrown if the minimal approvals value is out of bounds (less than 1 or greater than the number of members in the address list).
-    /// @param limit The maximal value.
-    /// @param actual The actual value.
-    error MinApprovalsOutOfBounds(uint16 limit, uint16 actual);
-
     /// @notice Thrown if the vote phase duration is out of bounds (more than 1 year or less than 1 hour).
     /// @param limit The limit value.
     /// @param actual The actual value.

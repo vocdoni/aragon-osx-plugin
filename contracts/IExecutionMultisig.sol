@@ -42,6 +42,11 @@ interface IExecutionMultisig {
     /// @return Whether the address is a member of the execution multisig.
     function isExecutionMultisigMember(address _member) external view returns (bool);
 
+    /// @notice Returns true if msg.sender has approved the given proposal tally
+    /// @param _proposalId The ID of the proposal.
+    /// @return Whether the msg.sender has approved the proposal tally.
+    function hasApprovedTally(uint256 _proposalId, address _member) external view returns (bool);
+
     /// @notice Returns the block number of the last executionMultisig change.
     /// @return The block number of the last executionMultisig change.
     function getLastExecutionMultisigChange() external view returns (uint64);

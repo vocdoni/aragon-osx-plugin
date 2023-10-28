@@ -20,7 +20,6 @@ import {ExecutionMultisig} from "./ExecutionMultisig.sol";
 contract VocdoniVoting is
     IVocdoniVoting,
     PluginUUPSUpgradeable,
-    VocdoniProposalUpgradeable,
     ExecutionMultisig
 {
     using SafeCastUpgradeable for uint256;
@@ -77,44 +76,6 @@ contract VocdoniVoting is
         string censusStrategyURI;
     }
 
-    /// @notice A container for the proposal parameters.
-    /// @param securityBlock Block number used for limiting contract usage when plugin settings are updated
-    /// @param startDate The timestamp when the proposal starts.
-    /// @param voteEndDate The timestamp when the proposal ends. At this point the tally can be set.
-    /// @param tallyEndDate The timestamp when the proposal expires. Proposal can't be executed after.
-    /// @param totalVotingPower The total voting power of the proposal.
-    /// @param censusURI The URI of the census.
-    /// @param censusRoot The root of the census.
-    struct ProposalParameters {
-        uint64 securityBlock;
-        uint64 startDate;
-        uint64 voteEndDate;
-        uint64 tallyEndDate;
-        uint256 totalVotingPower;
-        string censusURI;
-        bytes32 censusRoot;
-    }
-
-    /// @notice A container for proposal-related information.
-    /// @param executed Whether the proposal is executed or not.
-    /// @param vochainProposalId The ID of the proposal in the Vochain.
-    /// @param allowFailureMap A bitmap allowing the proposal to succeed, even if individual actions might revert. If the bit at index `i` is 1,
-    //         the proposal succeeds even if the nth action reverts. A failure map value of 0 requires every action to not revert.
-    /// @param parameters The parameters of the proposal.
-    /// @param tally The tally of the proposal.
-    /// @dev tally only supports [[Yes, No, Abstain]] schema in this order. i.e [[10, 5, 2]] means 10 Yes, 5 No, 2 Abstain.
-    /// @param approvers The approvers of the tally.
-    /// @param actions The actions to be executed when the proposal passes.
-    struct Proposal {
-        bool executed;
-        bytes32 vochainProposalId;
-        uint256 allowFailureMap;
-        ProposalParameters parameters;
-        uint256[][] tally;
-        address[] approvers;
-        IDAO.Action[] actions;
-    }
-
     /// @notice Keeps track at which block number the plugin settings have been changed the last time.
     uint64 private lastPluginSettingsChange;
 
@@ -147,7 +108,7 @@ contract VocdoniVoting is
         public
         view
         virtual
-        override(PluginUUPSUpgradeable, VocdoniProposalUpgradeable, ExecutionMultisig)
+        override(PluginUUPSUpgradeable, ExecutionMultisig)
         returns (bool)
     {
         return
@@ -185,6 +146,30 @@ contract VocdoniVoting is
         lastExecutionMultisigChange = uint64(block.number);
 
         emit ExecutionMultisigMembersRemoved({removedMembers: _members});
+    }
+
+    /// @inheritdoc ExecutionMultisig
+    function hasApprovedTally(uint256 _proposalId, address _member) external view override returns (bool) {
+        return _hasApprovedTally(proposals[_proposalId], _member);
+    }
+
+    /// @notice Internal function for checking if a member has approved a proposal tally.
+    /// @param _proposal The proposal to check.
+    /// @param _member The member to check.
+    /// @return Whether the member has approved the proposal tally.
+    function _hasApprovedTally(
+        Proposal memory _proposal,
+        address _member
+    ) internal pure returns (bool) {
+        for (uint256 i = 0; i < _proposal.approvers.length;) {
+            if (_proposal.approvers[i] == _member) {
+                return true;
+            }
+            unchecked {
+                i++;
+            }
+        }
+        return false;
     }
 
     /// @notice Updates the plugin settings.
@@ -536,8 +521,14 @@ contract VocdoniVoting is
         return false;
     }
 
-    /// @notice Internal function to check the tally and execute a proposal if the tally
-    ///         number of YES votes is greater than the tally number of NO votes.
+    /// @notice Internal function to check the tally and execute a proposal if:
+    ///          - The support threshold is reached
+    ///          - The minimum participation is reached.
+    ///          - Enough execution multisig members have approved the tally.
+    ///          - Proposal is not already executed.
+    ///          - The tally is valid.
+    ///          - The proposal is in the tally phase.
+    /// @param _proposalId The ID of the proposal to check.
     function _checkTallyAndExecute(uint256 _proposalId) internal {
         Proposal memory proposal = proposals[_proposalId];
 
@@ -616,7 +607,7 @@ contract VocdoniVoting is
         uint64 _startDate,
         uint64 _voteEndDate,
         uint64 _tallyEndDate
-    ) internal view virtual returns (uint64 startDate, uint64 voteEndDate, uint64 tallyEndDate) {
+    ) internal view returns (uint64 startDate, uint64 voteEndDate, uint64 tallyEndDate) {
         uint64 currentBlockTimestamp = block.timestamp.toUint64();
         // check proposal start date and set it to the current block timestamp if it is 0
         if (_startDate == 0) {

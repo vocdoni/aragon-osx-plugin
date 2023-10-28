@@ -10,12 +10,14 @@ import {PluginUUPSUpgradeable} from "@aragon/osx/core/plugin/PluginUUPSUpgradeab
 import {Addresslist} from "@aragon/osx/plugins/utils/Addresslist.sol";
 
 import {IExecutionMultisig} from "./IExecutionMultisig.sol";
+import {VocdoniProposalUpgradeable} from "./VocdoniProposalUpgradeable.sol";
 
 abstract contract ExecutionMultisig is
     IExecutionMultisig,
     Initializable,
     ERC165Upgradeable,
     PluginUUPSUpgradeable,
+    VocdoniProposalUpgradeable,
     Addresslist
 {
     using SafeCastUpgradeable for uint256;
@@ -46,11 +48,12 @@ abstract contract ExecutionMultisig is
         public
         view
         virtual
-        override(ERC165Upgradeable, PluginUUPSUpgradeable)
+        override(ERC165Upgradeable, PluginUUPSUpgradeable, VocdoniProposalUpgradeable)
         returns (bool)
     {
         return
             _interfaceId == type(IExecutionMultisig).interfaceId ||
+            _interfaceId == type(Addresslist).interfaceId ||
             super.supportsInterface(_interfaceId);
     }
 
@@ -102,6 +105,11 @@ abstract contract ExecutionMultisig is
     function _isExecutionMultisigMember(address _member) internal view returns (bool) {
         return isListed(_member);
     }
+
+     /// @notice Returns true if msg.sender has approved the given proposal tally
+    /// @param _proposalId The ID of the proposal.
+    /// @return Whether the msg.sender has approved the proposal tally.
+    function hasApprovedTally(uint256 _proposalId, address _member) external virtual view returns (bool);
 
     /// @notice Returns the block number of the last executionMultisig change.
     /// @return The block number of the last executionMultisig change.
