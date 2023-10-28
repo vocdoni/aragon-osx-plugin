@@ -611,17 +611,25 @@ contract VocdoniVoting is
             });
         }
 
-        uint256 _currentSupport = (RATIO_BASE - pluginSettings.supportThreshold) *
+        uint256 yesRatioPart = (RATIO_BASE - pluginSettings.supportThreshold) *
             proposal.tally[0][0];
-        if (_currentSupport < pluginSettings.supportThreshold * proposal.tally[0][1]) {
+        uint256 noRatioPart = pluginSettings.supportThreshold * proposal.tally[0][1];
+        if (yesRatioPart <= noRatioPart) {
             revert SupportThresholdNotReached({
-                currentSupport: _currentSupport,
+                currentSupport: _getCurrentSupport(proposal.tally),
                 supportThreshold: pluginSettings.supportThreshold
             });
         }
 
         proposals[_proposalId].executed = true;
         _executeProposal(dao(), _proposalId, proposal.actions, proposal.allowFailureMap);
+    }
+
+    /// @notice Internal function calculating the current support of a proposal
+    /// @param _tally The tally of the proposal.
+    /// @return The current support of the proposal.
+    function _getCurrentSupport(uint256[][] memory _tally) internal pure returns (uint256) {
+        return (_tally[0][0] * RATIO_BASE) / (_tally[0][0] + _tally[0][1]);
     }
 
     /// @notice Internal function for validating the proposal dates.
