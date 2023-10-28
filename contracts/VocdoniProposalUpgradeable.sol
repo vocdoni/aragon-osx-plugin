@@ -13,6 +13,44 @@ import {IDAO} from "@aragon/osx/core/dao/IDAO.sol";
 abstract contract VocdoniProposalUpgradeable is IVocdoniProposal, ERC165Upgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
+    /// @notice A container for the proposal parameters.
+    /// @param securityBlock Block number used for limiting contract usage when plugin settings are updated
+    /// @param startDate The timestamp when the proposal starts.
+    /// @param voteEndDate The timestamp when the proposal ends. At this point the tally can be set.
+    /// @param tallyEndDate The timestamp when the proposal expires. Proposal can't be executed after.
+    /// @param totalVotingPower The total voting power of the proposal.
+    /// @param censusURI The URI of the census.
+    /// @param censusRoot The root of the census.
+    struct ProposalParameters {
+        uint64 securityBlock;
+        uint64 startDate;
+        uint64 voteEndDate;
+        uint64 tallyEndDate;
+        uint256 totalVotingPower;
+        string censusURI;
+        bytes32 censusRoot;
+    }
+
+    /// @notice A container for proposal-related information.
+    /// @param executed Whether the proposal is executed or not.
+    /// @param vochainProposalId The ID of the proposal in the Vochain.
+    /// @param allowFailureMap A bitmap allowing the proposal to succeed, even if individual actions might revert. If the bit at index `i` is 1,
+    //         the proposal succeeds even if the nth action reverts. A failure map value of 0 requires every action to not revert.
+    /// @param parameters The parameters of the proposal.
+    /// @param tally The tally of the proposal.
+    /// @dev tally only supports [[Yes, No, Abstain]] schema in this order. i.e [[10, 5, 2]] means 10 Yes, 5 No, 2 Abstain.
+    /// @param approvers The approvers of the tally.
+    /// @param actions The actions to be executed when the proposal passes.
+    struct Proposal {
+        bool executed;
+        bytes32 vochainProposalId;
+        uint256 allowFailureMap;
+        ProposalParameters parameters;
+        uint256[][] tally;
+        address[] approvers;
+        IDAO.Action[] actions;
+    }
+
     /// @notice The incremental ID for proposals and executions.
     CountersUpgradeable.Counter private proposalCounter;
 

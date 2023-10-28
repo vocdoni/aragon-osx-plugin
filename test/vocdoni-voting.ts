@@ -13,6 +13,7 @@ import {
   VocdoniVoting__factory,
   GovernanceERC20Mock,
   GovernanceERC20Mock__factory,
+  IExecutionMultisig__factory,
 } from '../typechain';
 
 import {VOCDONI_EVENTS} from './utils/event';
@@ -27,9 +28,6 @@ import {deployWithProxy} from './utils/dao';
 import {getInterfaceID, OZ_ERRORS} from './utils/helpers';
 
 export const vocdoniVotingInterface = new ethers.utils.Interface([
-  'function addExecutionMultisigMembers(address[] calldata _members)',
-  'function removeExecutionMultisigMembers(address[] calldata _members)',
-  'function isExecutionMultisigMember(address _member)',
   'function setTally(uint256 _proposalId, uint256[][] memory _tally)',
   'function approveTally(uint256 _proposalId, bool _tryExecution)',
   'function executeProposal(uint256 _proposalId)',
@@ -390,6 +388,12 @@ describe('Vocdoni Plugin', function () {
 
     it('supports the `Addresslist` interface', async () => {
       const iface = Addresslist__factory.createInterface();
+      expect(await vocdoniVoting.supportsInterface(getInterfaceID(iface))).to.be
+        .true;
+    });
+
+    it('supports the `IExecutionMultisig` interface', async () => {
+      const iface = IExecutionMultisig__factory.createInterface();
       expect(await vocdoniVoting.supportsInterface(getInterfaceID(iface))).to.be
         .true;
     });
