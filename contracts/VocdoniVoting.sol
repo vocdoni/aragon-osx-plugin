@@ -687,6 +687,10 @@ contract VocdoniVoting is
         return _hasApprovedTally(proposals[_proposalId], _member);
     }
 
+    /// @notice Internal function for checking if a member has approved a proposal tally.
+    /// @param _proposal The proposal to check.
+    /// @param _member The member to check.
+    /// @return Whether the member has approved the proposal tally.
     function _hasApprovedTally(
         Proposal memory _proposal,
         address _member
