@@ -558,7 +558,7 @@ contract VocdoniVoting is
     function _isProposalOnTallyPhase(Proposal memory _proposal) internal view returns (bool) {
         uint64 currentBlockTimestamp = uint64(block.timestamp);
         /// [... startDate ............ voteEndDate ............ tallyEndDate ...]
-        /// [............. Voting phase ....... Tally phase ...................]
+        /// [............. Voting phase ............ Tally phase ................]
         if (
             _proposal.parameters.startDate < currentBlockTimestamp &&
             _proposal.parameters.voteEndDate < currentBlockTimestamp-1 &&
@@ -583,7 +583,7 @@ contract VocdoniVoting is
             revert InvalidTally({tally: proposal.tally});
         }
 
-        if (proposal.parameters.tallyEndDate < block.timestamp-1) {
+        if (proposal.parameters.tallyEndDate < block.timestamp) {
             revert ProposalNotInTallyPhase({
                 voteEndDate: proposal.parameters.voteEndDate,
                 tallyEndDate: proposal.parameters.tallyEndDate,
