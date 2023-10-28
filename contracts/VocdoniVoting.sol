@@ -393,8 +393,11 @@ contract VocdoniVoting is
         proposal.parameters.censusRoot = _parameters.censusRoot;
         proposal.parameters.securityBlock = block.number.toUint64();
         proposal.allowFailureMap = _allowFailureMap;
-        for (uint256 i = 0; i < _actions.length; i++) {
+        for (uint256 i = 0; i < _actions.length;) {
             proposal.actions.push(_actions[i]);
+            unchecked {
+                i++;
+            }
         }
 
         emit ProposalCreated(
@@ -516,12 +519,17 @@ contract VocdoniVoting is
         if (proposal.parameters.securityBlock < lastExecutionMultisigChange) {
             address[] memory newApprovers = new address[](0);
             // newApprovers are the oldApprovers list without the non executionMultisig members at the current block
-            uint16 newApproversCount = 0;
-            for (uint256 i = 0; i < proposal.approvers.length; i++) {
+            uint8 newApproversCount = 0;
+            for (uint256 i = 0; i < proposal.approvers.length;) {
                 address oldApprover = proposal.approvers[i];
                 if (_isExecutionMultisigMember(oldApprover) && _hasApprovedTally(proposal, oldApprover)) {
                     newApprovers[newApproversCount] = oldApprover;
-                    newApproversCount++;
+                    unchecked {
+                        newApproversCount++;
+                    }
+                }
+                unchecked {
+                    i++;
                 }
             }
             proposal.approvers = newApprovers;
@@ -683,9 +691,12 @@ contract VocdoniVoting is
         Proposal memory _proposal,
         address _member
     ) internal pure returns (bool) {
-        for (uint256 i = 0; i < _proposal.approvers.length; i++) {
+        for (uint256 i = 0; i < _proposal.approvers.length;) {
             if (_proposal.approvers[i] == _member) {
                 return true;
+            }
+            unchecked {
+                i++;
             }
         }
         return false;
