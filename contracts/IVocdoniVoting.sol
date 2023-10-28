@@ -6,14 +6,6 @@ pragma solidity ^0.8.17;
 /// @notice The Vocdoni gasless voting contract interface for the OSX plugin.
 /// @notice The voting Proposal is managed gasless on the Vocdoni blockchain.
 interface IVocdoniVoting {
-    /// @notice Emitted when one or more execution multisig members are added.
-    /// @param newMembers The addresses of the new execution multisig members.
-    event ExecutionMultisigMembersAdded(address[] newMembers);
-
-    /// @notice Emitted when one or more execution multisig member are removed.
-    /// @param removedMembers The addresses of the removed execution multisig members.
-    event ExecutionMultisigMembersRemoved(address[] removedMembers);
-
     /// @notice Emitted when the tally of a proposal is set.
     /// @param proposalId The ID of the proposal.
     /// @param tally The tally.
@@ -22,11 +14,6 @@ interface IVocdoniVoting {
     /// @notice Emitted when the tally of a proposal is approved by a member.
     /// @param proposalId The ID of the proposal.
     event TallyApproval(uint256 indexed proposalId, address indexed approver);
-
-    /// @notice Thrown if the address list length is out of bounds.
-    /// @param limit The limit value.
-    /// @param actual The actual value.
-    error AddresslistLengthOutOfBounds(uint16 limit, uint256 actual);
 
     /// @notice Thrown if the minimal approvals value is out of bounds (less than 1 or greater than the number of members in the address list).
     /// @param limit The maximal value.
@@ -61,10 +48,6 @@ interface IVocdoniVoting {
     /// @notice Thrown if the plugin settings are updated too recently.
     /// @param lastUpdate The block number of the last update.
     error PluginSettingsUpdatedTooRecently(uint64 lastUpdate);
-
-    /// @notice Thrown if the execution multisig is updated too recently.
-    /// @param lastUpdate The block number of the last update.
-    error ExecutionMultisigUpdatedTooRecently(uint64 lastUpdate);
 
     /// @notice Thrown if the proposal is already executed.
     /// @param proposalId The ID of the proposal.
@@ -123,23 +106,6 @@ interface IVocdoniVoting {
     /// @notice Thrown if the total voting power is invalid
     /// @param totalVotingPower The total voting power
     error InvalidTotalVotingPower(uint256 totalVotingPower);
-
-    /// @notice Thrown if invalid list length
-    /// @param length The actual length
-    error InvalidListLength(uint256 length);
-
-    /// @notice Adds new execution multisig members.
-    /// @param _members The addresses of the new execution multisig members.
-    function addExecutionMultisigMembers(address[] calldata _members) external;
-
-    /// @notice Removes execution multisig members.
-    /// @param _members The addresses of the execution multisig members to remove.
-    function removeExecutionMultisigMembers(address[] calldata _members) external;
-
-    /// @notice Returns whether an address is a execution ultisig member.
-    /// @param _member The address to check.
-    /// @return Whether the address is a execution multisig member.
-    function isExecutionMultisigMember(address _member) external view returns (bool);
 
     /// @notice Sets the tally of a given proposal.
     /// @param _proposalId The ID of the proposal to set the tally of.
