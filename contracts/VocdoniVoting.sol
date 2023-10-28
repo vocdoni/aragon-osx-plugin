@@ -8,10 +8,10 @@ import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20
 import {IDAO} from "@aragon/osx/core/dao/IDAO.sol";
 import {PluginUUPSUpgradeable} from "@aragon/osx/core/plugin/PluginUUPSUpgradeable.sol";
 import {RATIO_BASE, _applyRatioCeiled, RatioOutOfBounds} from "@aragon/osx/plugins/utils/Ratio.sol";
-import {Addresslist} from "@aragon/osx/plugins/utils/Addresslist.sol";
 
 import {VocdoniProposalUpgradeable} from "./VocdoniProposalUpgradeable.sol";
 import {IVocdoniVoting} from "./IVocdoniVoting.sol";
+import {ExecutionMultisig} from "./ExecutionMultisig.sol";
 
 /// @title VocdoniVoting
 /// @author Vocdoni
@@ -21,7 +21,7 @@ contract VocdoniVoting is
     IVocdoniVoting,
     PluginUUPSUpgradeable,
     VocdoniProposalUpgradeable,
-    Addresslist
+    ExecutionMultisig
 {
     using SafeCastUpgradeable for uint256;
 
@@ -32,10 +32,6 @@ contract VocdoniVoting is
     /// @notice The ID of the permission required to update the plugin settings.
     bytes32 public constant UPDATE_PLUGIN_SETTINGS_PERMISSION_ID =
         keccak256("UPDATE_PLUGIN_SETTINGS_PERMISSION");
-
-    /// @notice The ID of the permission required to add/remove executionMultisig members.
-    bytes32 public constant UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID =
-        keccak256("UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION");
 
     /// @notice Emitted when the plugin settings are updated.
     /// @param onlyExecutionMultisigProposalCreation If true, only executionMultisig members can create proposals.
@@ -122,9 +118,6 @@ contract VocdoniVoting is
     /// @notice Keeps track at which block number the plugin settings have been changed the last time.
     uint64 private lastPluginSettingsChange;
 
-    /// @notice Keeps track at which block number the executionMultisig has been changed the last time.
-    uint64 private lastExecutionMultisigChange;
-
     /// @notice A mapping between proposal IDs and proposal information.
     mapping(uint256 => Proposal) private proposals;
 
@@ -140,7 +133,7 @@ contract VocdoniVoting is
         address[] calldata _executionMultisigAddresses,
         PluginSettings memory _pluginSettings
     ) external initializer {
-        __PluginUUPSUpgradeable_init(_dao);
+        __ExecutionMultisig_init(_dao);
         _addExecutionMultisigMembers(_executionMultisigAddresses);
         _updatePluginSettings(_pluginSettings);
     }
@@ -154,48 +147,16 @@ contract VocdoniVoting is
         public
         view
         virtual
-        override(PluginUUPSUpgradeable, VocdoniProposalUpgradeable)
+        override(PluginUUPSUpgradeable, VocdoniProposalUpgradeable, ExecutionMultisig)
         returns (bool)
     {
         return
             _interfaceId == VOCDONI_INTERFACE_ID ||
             _interfaceId == type(IVocdoniVoting).interfaceId ||
-            _interfaceId == type(Addresslist).interfaceId ||
             super.supportsInterface(_interfaceId);
     }
 
-    /// @inheritdoc IVocdoniVoting
-    function addExecutionMultisigMembers(
-        address[] calldata _members
-    ) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) {
-        _addExecutionMultisigMembers(_members);
-    }
-
-    /// @notice Private function for adding execution multisig members.
-    /// @param _members The addresses to add.
-    function _addExecutionMultisigMembers(address[] calldata _members) private {
-        _guardExecutionMultisig();
-        if (_members.length == 0) {
-            revert InvalidListLength({length: _members.length});
-        }
-
-        uint256 newAddresslistLength = addresslistLength() + _members.length;
-
-        // Check if the new address list length would be greater than `type(uint16).max`, the maximal number of approvals.
-        if (newAddresslistLength > type(uint16).max) {
-            revert AddresslistLengthOutOfBounds({
-                limit: type(uint16).max,
-                actual: newAddresslistLength
-            });
-        }
-
-        _addAddresses(_members);
-        lastExecutionMultisigChange = uint64(block.number);
-
-        emit ExecutionMultisigMembersAdded({newMembers: _members});
-    }
-
-    /// @inheritdoc IVocdoniVoting
+    /// @inheritdoc ExecutionMultisig
     function removeExecutionMultisigMembers(
         address[] calldata _members
     ) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) {
@@ -224,18 +185,6 @@ contract VocdoniVoting is
         lastExecutionMultisigChange = uint64(block.number);
 
         emit ExecutionMultisigMembersRemoved({removedMembers: _members});
-    }
-
-    /// @inheritdoc IVocdoniVoting
-    function isExecutionMultisigMember(address _member) public view override returns (bool) {
-        return _isExecutionMultisigMember(_member);
-    }
-
-    /// @notice Internal function for checking whether an address is a executionMultisig member.
-    /// @param _member The address to check.
-    /// @return Whether the address is a executionMultisig member.
-    function _isExecutionMultisigMember(address _member) internal view returns (bool) {
-        return isListed(_member);
     }
 
     /// @notice Updates the plugin settings.
@@ -736,14 +685,6 @@ contract VocdoniVoting is
     }
 
     /// @notice Guard checks that processes key updates are not executed in the same block
-    ///         where the executionMultisig changed.
-    function _guardExecutionMultisig() internal view {
-        if (lastExecutionMultisigChange == uint64(block.number)) {
-            revert ExecutionMultisigUpdatedTooRecently({lastUpdate: lastExecutionMultisigChange});
-        }
-    }
-
-    /// @notice Guard checks that processes key updates are not executed in the same block
     ///          where the plugin settings changed.
     function _guardPluginSettings() internal view {
         if (lastPluginSettingsChange == uint64(block.number)) {
@@ -751,12 +692,8 @@ contract VocdoniVoting is
         }
     }
 
-    // get last executionMultisig change block number
-    function getLastExecutionMultisigChange() external view returns (uint64) {
-        return lastExecutionMultisigChange;
-    }
-
-    // get last plugin settings change block number
+    /// @notice Returns the last block number where the plugin settings changed.
+    /// @return The last block number where the plugin settings changed.
     function getLastPluginSettingsChange() external view returns (uint64) {
         return lastPluginSettingsChange;
     }
