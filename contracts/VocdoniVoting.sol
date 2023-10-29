@@ -118,6 +118,7 @@ contract VocdoniVoting is
     }
 
     /// @inheritdoc ExecutionMultisig
+    /// @dev Overriden where for having access to minTallyApprovals
     function removeExecutionMultisigMembers(
         address[] calldata _members
     ) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) {
