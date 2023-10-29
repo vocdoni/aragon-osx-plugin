@@ -17,11 +17,7 @@ import {ExecutionMultisig} from "./ExecutionMultisig.sol";
 /// @author Vocdoni
 /// @notice The Vocdoni gasless voting data contract for the OSX plugin.
 /// @notice The voting Proposal is managed gasless on the Vocdoni blockchain.
-contract VocdoniVoting is
-    IVocdoniVoting,
-    PluginUUPSUpgradeable,
-    ExecutionMultisig
-{
+contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultisig {
     using SafeCastUpgradeable for uint256;
 
     /// @notice The [ERC-165](https://eips.ethereum.org/EIPS/eip-165) interface ID of the contract.
@@ -104,13 +100,7 @@ contract VocdoniVoting is
     /// @return Returns `true` if the interface is supported.
     function supportsInterface(
         bytes4 _interfaceId
-    )
-        public
-        view
-        virtual
-        override(PluginUUPSUpgradeable, ExecutionMultisig)
-        returns (bool)
-    {
+    ) public view virtual override(PluginUUPSUpgradeable, ExecutionMultisig) returns (bool) {
         return
             _interfaceId == VOCDONI_INTERFACE_ID ||
             _interfaceId == type(IVocdoniVoting).interfaceId ||
@@ -150,7 +140,10 @@ contract VocdoniVoting is
     }
 
     /// @inheritdoc ExecutionMultisig
-    function hasApprovedTally(uint256 _proposalId, address _member) external view override returns (bool) {
+    function hasApprovedTally(
+        uint256 _proposalId,
+        address _member
+    ) external view override returns (bool) {
         return _hasApprovedTally(proposals[_proposalId], _member);
     }
 
@@ -162,7 +155,7 @@ contract VocdoniVoting is
         Proposal memory _proposal,
         address _member
     ) internal pure returns (bool) {
-        for (uint256 i = 0; i < _proposal.approvers.length;) {
+        for (uint256 i = 0; i < _proposal.approvers.length; ) {
             if (_proposal.approvers[i] == _member) {
                 return true;
             }
