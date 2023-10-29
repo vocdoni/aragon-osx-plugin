@@ -643,32 +643,6 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultis
         return pluginSettings;
     }
 
-    /// @notice Returns true if the provided _member has approved the given proposal tally
-    /// @param _proposalId The ID of the proposal.
-    /// @return Whether the msg.sender has approved the proposal tally.
-    function hasApprovedTally(uint256 _proposalId, address _member) external view returns (bool) {
-        return _hasApprovedTally(proposals[_proposalId], _member);
-    }
-
-    /// @notice Internal function for checking if a member has approved a proposal tally.
-    /// @param _proposal The proposal to check.
-    /// @param _member The member to check.
-    /// @return Whether the member has approved the proposal tally.
-    function _hasApprovedTally(
-        Proposal memory _proposal,
-        address _member
-    ) internal pure returns (bool) {
-        for (uint256 i = 0; i < _proposal.approvers.length; ) {
-            if (_proposal.approvers[i] == _member) {
-                return true;
-            }
-            unchecked {
-                i++;
-            }
-        }
-        return false;
-    }
-
     /// @notice Guard checks that processes key updates are not executed in the same block
     ///          where the plugin settings changed.
     function _guardPluginSettings() internal view {
