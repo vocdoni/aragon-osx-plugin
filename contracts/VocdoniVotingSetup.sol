@@ -143,9 +143,7 @@ contract VocdoniVotingSetup is PluginSetup {
             address(vocdoniVoting),
             abi.encodeCall(
                 VocdoniVoting.initialize,
-                (IDAO(_dao),
-                executionMultisig,
-                pluginSettings)
+                (IDAO(_dao), executionMultisig, pluginSettings)
             )
         );
 

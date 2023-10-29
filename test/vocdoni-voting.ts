@@ -17,7 +17,12 @@ import {
 
 import {VOCDONI_EVENTS} from './utils/event';
 import {deployNewDAO} from './utils/dao';
-import {timestampIn, setTimeForNextBlock, VocdoniProposalParams, VocdoniVotingSettings} from './utils/voting';
+import {
+  timestampIn,
+  setTimeForNextBlock,
+  VocdoniProposalParams,
+  VocdoniVotingSettings,
+} from './utils/voting';
 import {deployWithProxy} from './utils/dao';
 import {getInterfaceID, OZ_ERRORS} from './utils/helpers';
 
@@ -117,7 +122,7 @@ describe('Vocdoni Plugin', function () {
       minTallyDuration: 3600,
       daoTokenAddress: governanceErc20Mock.address,
       minProposerVotingPower: BigNumber.from(0),
-      censusStrategyURI: "ipfs://Qm...",
+      censusStrategyURI: 'ipfs://Qm...',
     };
 
     vocdoniProposalParams = {
@@ -126,8 +131,9 @@ describe('Vocdoni Plugin', function () {
       voteEndDate: 0,
       tallyEndDate: 0,
       totalVotingPower: BigNumber.from(1),
-      censusURI: "ipfs://Qm...",
-      censusRoot: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+      censusURI: 'ipfs://Qm...',
+      censusRoot:
+        '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
     };
 
     const VocdoniVotingFactory = new VocdoniVoting__factory(signers[0]);
@@ -256,9 +262,9 @@ describe('Vocdoni Plugin', function () {
         signers.slice(0, 5).map(s => s.address),
         vocdoniVotingSettings
       );
-      expect((await vocdoniVoting.getPluginSettings()).minVoteDuration).to.be.eq(
-        vocdoniVotingSettings.minVoteDuration
-      );
+      expect(
+        (await vocdoniVoting.getPluginSettings()).minVoteDuration
+      ).to.be.eq(vocdoniVotingSettings.minVoteDuration);
     });
 
     it('should set `minTallyDuration`', async () => {
@@ -267,9 +273,9 @@ describe('Vocdoni Plugin', function () {
         signers.slice(0, 5).map(s => s.address),
         vocdoniVotingSettings
       );
-      expect((await vocdoniVoting.getPluginSettings()).minTallyDuration).to.be.eq(
-        vocdoniVotingSettings.minTallyDuration
-      );
+      expect(
+        (await vocdoniVoting.getPluginSettings()).minTallyDuration
+      ).to.be.eq(vocdoniVotingSettings.minTallyDuration);
     });
 
     it('should set `daoTokenAddress`', async () => {
@@ -289,9 +295,9 @@ describe('Vocdoni Plugin', function () {
         signers.slice(0, 5).map(s => s.address),
         vocdoniVotingSettings
       );
-      expect((await vocdoniVoting.getPluginSettings()).censusStrategyURI).to.be.eq(
-        vocdoniVotingSettings.censusStrategyURI
-      );
+      expect(
+        (await vocdoniVoting.getPluginSettings()).censusStrategyURI
+      ).to.be.eq(vocdoniVotingSettings.censusStrategyURI);
     });
 
     it('should set `minProposerVotingPower`', async () => {
@@ -351,16 +357,11 @@ describe('Vocdoni Plugin', function () {
 
     it('should emit `ExecutionMultisigMembersAdded` during initialization', async () => {
       const members = signers.slice(0, 5).map(s => s.address);
-  
+
       await expect(
-        vocdoniVoting.initialize(
-          dao.address,
-          members,
-          vocdoniVotingSettings
-        )
-      )
-        .to.emit(vocdoniVoting, VOCDONI_EVENTS.EXECUTION_MULTISIG_MEMBERS_ADDED)
-        // returns a hash of the members array
+        vocdoniVoting.initialize(dao.address, members, vocdoniVotingSettings)
+      ).to.emit(vocdoniVoting, VOCDONI_EVENTS.EXECUTION_MULTISIG_MEMBERS_ADDED);
+      // returns a hash of the members array
     });
   });
 
@@ -427,16 +428,16 @@ describe('Vocdoni Plugin', function () {
     it('should update `minVoteDuration`', async () => {
       vocdoniVotingSettings.minVoteDuration = 20000;
       await vocdoniVoting.updatePluginSettings(vocdoniVotingSettings);
-      expect((await vocdoniVoting.getPluginSettings()).minVoteDuration).to.be.eq(
-        vocdoniVotingSettings.minVoteDuration
-      );
+      expect(
+        (await vocdoniVoting.getPluginSettings()).minVoteDuration
+      ).to.be.eq(vocdoniVotingSettings.minVoteDuration);
     });
     it('should update `minTallyDuration`', async () => {
       vocdoniVotingSettings.minTallyDuration = 20000;
       await vocdoniVoting.updatePluginSettings(vocdoniVotingSettings);
-      expect((await vocdoniVoting.getPluginSettings()).minTallyDuration).to.be.eq(
-        vocdoniVotingSettings.minTallyDuration
-      );
+      expect(
+        (await vocdoniVoting.getPluginSettings()).minTallyDuration
+      ).to.be.eq(vocdoniVotingSettings.minTallyDuration);
     });
     it('should update `minParticipation`', async () => {
       vocdoniVotingSettings.minParticipation = 1;
@@ -462,9 +463,9 @@ describe('Vocdoni Plugin', function () {
     it('should update `censusStrategyURI`', async () => {
       vocdoniVotingSettings.censusStrategyURI = '0x123456789';
       await vocdoniVoting.updatePluginSettings(vocdoniVotingSettings);
-      expect((await vocdoniVoting.getPluginSettings()).censusStrategyURI).to.be.eq(
-        vocdoniVotingSettings.censusStrategyURI
-      );
+      expect(
+        (await vocdoniVoting.getPluginSettings()).censusStrategyURI
+      ).to.be.eq(vocdoniVotingSettings.censusStrategyURI);
     });
     it('should update `minProposerVotingPower`', async () => {
       vocdoniVotingSettings.minProposerVotingPower = BigNumber.from(1);
@@ -555,8 +556,8 @@ describe('Vocdoni Plugin', function () {
 
   describe('isExecutionMultisigMember', async () => {
     it('should return false, if user is not listed', async () => {
-      expect(await vocdoniVoting.isExecutionMultisigMember(signers[0].address)).to.be
-        .false;
+      expect(await vocdoniVoting.isExecutionMultisigMember(signers[0].address))
+        .to.be.false;
     });
 
     it('should return true if user is in the latest list', async () => {
@@ -565,8 +566,8 @@ describe('Vocdoni Plugin', function () {
         [signers[0].address],
         vocdoniVotingSettings
       );
-      expect(await vocdoniVoting.isExecutionMultisigMember(signers[0].address)).to.be
-        .true;
+      expect(await vocdoniVoting.isExecutionMultisigMember(signers[0].address))
+        .to.be.true;
     });
   });
 
@@ -607,7 +608,10 @@ describe('Vocdoni Plugin', function () {
       // remove an existing member
       await expect(
         vocdoniVoting.removeExecutionMultisigMembers([signers[1].address])
-      ).to.emit(vocdoniVoting, VOCDONI_EVENTS.EXECUTION_MULTISIG_MEMBERS_REMOVED);
+      ).to.emit(
+        vocdoniVoting,
+        VOCDONI_EVENTS.EXECUTION_MULTISIG_MEMBERS_REMOVED
+      );
       //.withArgs([signers[1].address]);
 
       expect(await vocdoniVoting.isListed(signers[0].address)).to.equal(true);
@@ -622,7 +626,9 @@ describe('Vocdoni Plugin', function () {
         vocdoniVotingSettings
       );
 
-      await expect(vocdoniVoting.removeExecutionMultisigMembers([signers[0].address]))
+      await expect(
+        vocdoniVoting.removeExecutionMultisigMembers([signers[0].address])
+      )
         .to.be.revertedWithCustomError(vocdoniVoting, 'MinApprovalsOutOfBounds')
         .withArgs(
           (await vocdoniVoting.addresslistLength()).sub(1),
@@ -638,10 +644,13 @@ describe('Vocdoni Plugin', function () {
         vocdoniVotingSettings
       );
 
-      await expect(vocdoniVoting.removeExecutionMultisigMembers([signers[1].address]))
-        .not.to.be.reverted;
+      await expect(
+        vocdoniVoting.removeExecutionMultisigMembers([signers[1].address])
+      ).not.to.be.reverted;
 
-      await expect(vocdoniVoting.removeExecutionMultisigMembers([signers[2].address]))
+      await expect(
+        vocdoniVoting.removeExecutionMultisigMembers([signers[2].address])
+      )
         .to.be.revertedWithCustomError(vocdoniVoting, 'MinApprovalsOutOfBounds')
         .withArgs(
           (await vocdoniVoting.addresslistLength()).sub(1),
@@ -772,8 +781,10 @@ describe('Vocdoni Plugin', function () {
           },
         ]);
 
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
-      
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
+
       await vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]); // tally already approved by signers[0]
 
       await ethers.provider.send('evm_setAutomine', [false]);
@@ -1039,7 +1050,9 @@ describe('Vocdoni Plugin', function () {
           },
         ]);
 
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await vocdoniVoting.connect(signers[0]).setTally(1, [[10, 0, 0]]); // tally already approved by signers[0]
 
       // set automine to false
@@ -1102,7 +1115,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(
         vocdoniVoting.connect(signers[0]).setTally(0, [
           [10, 0, 0],
@@ -1135,7 +1150,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
 
@@ -1164,8 +1181,10 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
 
@@ -1194,8 +1213,10 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
 
@@ -1230,8 +1251,10 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
 
@@ -1265,8 +1288,10 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       let setTallyTx = await vocdoniVoting
         .connect(signers[0])
         .setTally(0, [[10, 0, 0]]);
@@ -1299,7 +1324,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
       await expect(vocdoniVoting.connect(signers[1]).approveTally(0, false))
@@ -1326,7 +1353,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(
         vocdoniVoting.connect(signers[0]).approveTally(0, false)
       ).to.be.revertedWithCustomError(vocdoniVoting, 'InvalidTally');
@@ -1352,7 +1381,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
       await expect(
@@ -1390,7 +1421,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
 
@@ -1433,7 +1466,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
 
@@ -1467,7 +1502,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(
         vocdoniVoting.connect(signers[0]).executeProposal(0)
       ).to.be.revertedWithCustomError(vocdoniVoting, 'InvalidTally');
@@ -1485,7 +1522,9 @@ describe('Vocdoni Plugin', function () {
         dao.address,
         await vocdoniVoting.UPDATE_PLUGIN_SETTINGS_PERMISSION_ID()
       );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await vocdoniVoting
         .connect(signers[0])
         .createProposal(
@@ -1519,7 +1558,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       // set tally
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;
@@ -1552,7 +1593,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       // set tally
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[1, 18, 0]]))
         .to.not.reverted;
@@ -1587,7 +1630,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       // set tally
       await expect(
         vocdoniVoting.connect(signers[0]).setTally(0, [[1, 200000, 0]])
@@ -1621,13 +1666,14 @@ describe('Vocdoni Plugin', function () {
             dummyActions
           )
       ).to.not.be.reverted;
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.be.reverted;
 
-      await expect(
-        vocdoniVoting.connect(signers[0]).executeProposal(0)
-      ).to.not.be.reverted;
+      await expect(vocdoniVoting.connect(signers[0]).executeProposal(0)).to.not
+        .be.reverted;
 
       await expect(
         vocdoniVoting.connect(signers[0]).executeProposal(0)
@@ -1654,7 +1700,9 @@ describe('Vocdoni Plugin', function () {
           vocdoniProposalParams,
           dummyActions
         );
-      setTimeForNextBlock((await ethers.provider.getBlock('latest')).timestamp + 4000);
+      setTimeForNextBlock(
+        (await ethers.provider.getBlock('latest')).timestamp + 4000
+      );
       // set tally
       await expect(vocdoniVoting.connect(signers[0]).setTally(0, [[10, 0, 0]]))
         .to.not.reverted;

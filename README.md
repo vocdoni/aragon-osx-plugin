@@ -41,15 +41,15 @@ The plugin is configured with the following parameters:
 /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
 /// @param censusStrategyURI The URI containing he census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
 struct PluginSettings {
-    bool onlyExecutionMultisigProposalCreation;
-    uint16 minTallyApprovals;
-    uint32 minParticipation;
-    uint32 supportThreshold;
-    uint64 minVoteDuration;
-    uint64 minTallyDuration;
-    address daoTokenAddress;
-    uint256 minProposerVotingPower;
-    string censusStrategyURI;
+  bool onlyExecutionMultisigProposalCreation;
+  uint16 minTallyApprovals;
+  uint32 minParticipation;
+  uint32 supportThreshold;
+  uint64 minVoteDuration;
+  uint64 minTallyDuration;
+  address daoTokenAddress;
+  uint256 minProposerVotingPower;
+  string censusStrategyURI;
 }
 ```
 
@@ -92,13 +92,13 @@ A proposal is defined as:
 /// @param approvers The approvers of the tally.
 /// @param actions The actions to be executed when the proposal passes.
 struct Proposal {
-    bool executed;
-    bytes32 vochainProposalId;
-    uint256 allowFailureMap;
-    ProposalParameters parameters;
-    uint256[][] tally;
-    address[] approvers;
-    IDAO.Action[] actions;
+  bool executed;
+  bytes32 vochainProposalId;
+  uint256 allowFailureMap;
+  ProposalParameters parameters;
+  uint256[][] tally;
+  address[] approvers;
+  IDAO.Action[] actions;
 }
 ```
 
@@ -114,13 +114,13 @@ An the proposal parameters are defined as:
 /// @param censusURI The URI of the census.
 /// @param censusRoot The root of the census.
 struct ProposalParameters {
-    uint64 securityBlock;
-    uint64 startDate;
-    uint64 voteEndDate;
-    uint64 tallyEndDate;
-    uint256 totalVotingPower;
-    string censusURI;
-    string censusRoot;
+  uint64 securityBlock;
+  uint64 startDate;
+  uint64 voteEndDate;
+  uint64 tallyEndDate;
+  uint256 totalVotingPower;
+  string censusURI;
+  string censusRoot;
 }
 ```
 

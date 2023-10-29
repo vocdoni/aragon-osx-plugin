@@ -27,8 +27,7 @@ contract VocdoniVoting is
 
     /// @notice The [ERC-165](https://eips.ethereum.org/EIPS/eip-165) interface ID of the contract.
     bytes4 internal constant VOCDONI_INTERFACE_ID =
-        this.initialize.selector ^
-            this.createProposal.selector;
+        this.initialize.selector ^ this.createProposal.selector;
 
     /// @notice The ID of the permission required to update the plugin settings.
     bytes32 public constant UPDATE_PLUGIN_SETTINGS_PERMISSION_ID =
@@ -169,7 +168,7 @@ contract VocdoniVoting is
     function addExecutionMultisigMembers(
         address[] calldata _members
     ) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) {
-       _addExecutionMultisigMembers(_members);
+        _addExecutionMultisigMembers(_members);
     }
 
     /// @notice Private function for adding execution multisig members.
@@ -252,7 +251,7 @@ contract VocdoniVoting is
     /// @param _pluginSettings The new plugin settings.
     function _updatePluginSettings(PluginSettings memory _pluginSettings) private {
         _guardPluginSettings();
-        
+
         if (_pluginSettings.supportThreshold > RATIO_BASE - 1) {
             revert RatioOutOfBounds({
                 limit: RATIO_BASE - 1,
@@ -266,19 +265,31 @@ contract VocdoniVoting is
         }
 
         if (_pluginSettings.minVoteDuration > 365 days) {
-            revert VoteDurationOutOfBounds({limit: 365 days, actual: _pluginSettings.minVoteDuration});
+            revert VoteDurationOutOfBounds({
+                limit: 365 days,
+                actual: _pluginSettings.minVoteDuration
+            });
         }
 
         if (_pluginSettings.minVoteDuration < 60 minutes) {
-            revert VoteDurationOutOfBounds({limit: 60 minutes, actual: _pluginSettings.minVoteDuration});
+            revert VoteDurationOutOfBounds({
+                limit: 60 minutes,
+                actual: _pluginSettings.minVoteDuration
+            });
         }
 
         if (_pluginSettings.minTallyDuration > 365 days) {
-            revert TallyDurationOutOfBounds({limit: 365 days, actual: _pluginSettings.minTallyDuration});
+            revert TallyDurationOutOfBounds({
+                limit: 365 days,
+                actual: _pluginSettings.minTallyDuration
+            });
         }
-        
+
         if (_pluginSettings.minTallyDuration < 60 minutes) {
-            revert TallyDurationOutOfBounds({limit: 60 minutes, actual: _pluginSettings.minTallyDuration});
+            revert TallyDurationOutOfBounds({
+                limit: 60 minutes,
+                actual: _pluginSettings.minTallyDuration
+            });
         }
 
         // update plugin settings
@@ -286,7 +297,8 @@ contract VocdoniVoting is
         lastPluginSettingsChange = uint64(block.number);
 
         emit PluginSettingsUpdated({
-            onlyExecutionMultisigProposalCreation: _pluginSettings.onlyExecutionMultisigProposalCreation,
+            onlyExecutionMultisigProposalCreation: _pluginSettings
+                .onlyExecutionMultisigProposalCreation,
             minTallyApprovals: _pluginSettings.minTallyApprovals,
             minVoteDuration: _pluginSettings.minVoteDuration,
             minTallyDuration: _pluginSettings.minTallyDuration,
@@ -350,7 +362,10 @@ contract VocdoniVoting is
         PluginSettings memory _pluginSettings = pluginSettings;
         address sender = _msgSender();
 
-        if (_pluginSettings.onlyExecutionMultisigProposalCreation && !_isExecutionMultisigMember(sender)) {
+        if (
+            _pluginSettings.onlyExecutionMultisigProposalCreation &&
+            !_isExecutionMultisigMember(sender)
+        ) {
             revert OnlyExecutionMultisig({sender: sender});
         }
 
@@ -393,7 +408,7 @@ contract VocdoniVoting is
         proposal.parameters.censusRoot = _parameters.censusRoot;
         proposal.parameters.securityBlock = block.number.toUint64();
         proposal.allowFailureMap = _allowFailureMap;
-        for (uint256 i = 0; i < _actions.length;) {
+        for (uint256 i = 0; i < _actions.length; ) {
             proposal.actions.push(_actions[i]);
             unchecked {
                 i++;
@@ -520,9 +535,12 @@ contract VocdoniVoting is
             address[] memory newApprovers = new address[](0);
             // newApprovers are the oldApprovers list without the non executionMultisig members at the current block
             uint8 newApproversCount = 0;
-            for (uint256 i = 0; i < proposal.approvers.length;) {
+            for (uint256 i = 0; i < proposal.approvers.length; ) {
                 address oldApprover = proposal.approvers[i];
-                if (_isExecutionMultisigMember(oldApprover) && _hasApprovedTally(proposal, oldApprover)) {
+                if (
+                    _isExecutionMultisigMember(oldApprover) &&
+                    _hasApprovedTally(proposal, oldApprover)
+                ) {
                     newApprovers[newApproversCount] = oldApprover;
                     unchecked {
                         newApproversCount++;
@@ -561,7 +579,7 @@ contract VocdoniVoting is
         /// [............. Voting phase ............ Tally phase ................]
         if (
             _proposal.parameters.startDate < currentBlockTimestamp &&
-            _proposal.parameters.voteEndDate < currentBlockTimestamp-1 &&
+            _proposal.parameters.voteEndDate < currentBlockTimestamp - 1 &&
             _proposal.parameters.tallyEndDate > currentBlockTimestamp
         ) {
             return true;
@@ -602,7 +620,10 @@ contract VocdoniVoting is
             proposal.tally[0][1] +
             proposal.tally[0][2];
 
-        uint256 minVotingPower = _applyRatioCeiled(proposal.parameters.totalVotingPower, pluginSettings.minParticipation);
+        uint256 minVotingPower = _applyRatioCeiled(
+            proposal.parameters.totalVotingPower,
+            pluginSettings.minParticipation
+        );
 
         if (minVotingPower > currentVotingPower) {
             revert MinParticipationNotReached({
@@ -703,7 +724,7 @@ contract VocdoniVoting is
         Proposal memory _proposal,
         address _member
     ) internal pure returns (bool) {
-        for (uint256 i = 0; i < _proposal.approvers.length;) {
+        for (uint256 i = 0; i < _proposal.approvers.length; ) {
             if (_proposal.approvers[i] == _member) {
                 return true;
             }

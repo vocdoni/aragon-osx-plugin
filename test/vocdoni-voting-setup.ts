@@ -21,7 +21,7 @@ import metadata from '../contracts/build-metadata.json';
 import {VocdoniVotingSettings, pctToRatio, ONE_HOUR} from './utils/voting';
 import {vocdoniVotingInterface} from './vocdoni-voting';
 import {getNamedTypesFromMetadata} from './utils/metadata';
-import { BigNumber } from 'ethers';
+import {BigNumber} from 'ethers';
 
 let defaultData: any;
 let defaultVocdoniVotingSettings: VocdoniVotingSettings;

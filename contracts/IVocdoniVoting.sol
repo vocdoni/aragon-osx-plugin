@@ -96,7 +96,11 @@ interface IVocdoniVoting {
     /// @param voteEndDate The end date of the proposal
     /// @param tallyEndDate The tally end date of the proposal
     /// @param currentTimestamp The current timestamp
-    error ProposalNotInTallyPhase(uint64 voteEndDate, uint64 tallyEndDate, uint256 currentTimestamp);
+    error ProposalNotInTallyPhase(
+        uint64 voteEndDate,
+        uint64 tallyEndDate,
+        uint256 currentTimestamp
+    );
 
     /// @notice Thrown if the msg.sender does not have enough voting power
     /// @param required The required voting power
