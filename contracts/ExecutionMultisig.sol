@@ -26,16 +26,13 @@ abstract contract ExecutionMultisig is
     bytes32 public constant UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID =
         keccak256("UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION");
 
-
     /// @notice Keeps track at which block number the executionMultisig has been changed the last time.
     uint64 internal lastExecutionMultisigChange;
 
     /// @notice Initializes the component to be used by inheriting contracts.
     /// @dev This method is required to support [ERC-1822](https://eips.ethereum.org/EIPS/eip-1822).
     /// @param _dao The IDAO interface of the associated DAO.
-    function __ExecutionMultisig_init(
-        IDAO _dao
-    ) internal onlyInitializing {
+    function __ExecutionMultisig_init(IDAO _dao) internal onlyInitializing {
         __PluginUUPSUpgradeable_init(_dao);
     }
 
@@ -57,12 +54,11 @@ abstract contract ExecutionMultisig is
             super.supportsInterface(_interfaceId);
     }
 
-
     /// @inheritdoc IExecutionMultisig
     function addExecutionMultisigMembers(
         address[] calldata _members
     ) external override auth(UPDATE_PLUGIN_EXECUTION_MULTISIG_PERMISSION_ID) {
-       _addExecutionMultisigMembers(_members);
+        _addExecutionMultisigMembers(_members);
     }
 
     /// @notice Private function for adding execution multisig members.
@@ -90,9 +86,7 @@ abstract contract ExecutionMultisig is
     }
 
     /// @inheritdoc IExecutionMultisig
-    function removeExecutionMultisigMembers(
-        address[] calldata _members
-    ) external virtual {}
+    function removeExecutionMultisigMembers(address[] calldata _members) external virtual {}
 
     /// @inheritdoc IExecutionMultisig
     function isExecutionMultisigMember(address _member) public view override returns (bool) {
@@ -106,10 +100,13 @@ abstract contract ExecutionMultisig is
         return isListed(_member);
     }
 
-     /// @notice Returns true if msg.sender has approved the given proposal tally
+    /// @notice Returns true if msg.sender has approved the given proposal tally
     /// @param _proposalId The ID of the proposal.
     /// @return Whether the msg.sender has approved the proposal tally.
-    function hasApprovedTally(uint256 _proposalId, address _member) external virtual view returns (bool);
+    function hasApprovedTally(
+        uint256 _proposalId,
+        address _member
+    ) external view virtual returns (bool);
 
     /// @notice Returns the block number of the last executionMultisig change.
     /// @return The block number of the last executionMultisig change.
