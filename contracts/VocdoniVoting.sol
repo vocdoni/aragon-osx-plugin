@@ -28,6 +28,24 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultis
     bytes32 public constant UPDATE_PLUGIN_SETTINGS_PERMISSION_ID =
         keccak256("UPDATE_PLUGIN_SETTINGS_PERMISSION");
 
+    /// @notice The ID of the permission required to update the execution multisig with an onchain voting
+    ///         This permission should be understood as a red button to be used only in case of emergency.
+    ///         i.e the Execution Multisig becames compromised or evil.
+    ///         Given that all voting happens offchain and the execution multisig have the last word when uploading
+    ///         and approving results, this permission allow token holders to setup an on-chain voting for changing
+    ///         the execution multisig members.
+    ///         Note that any on-chain voting will have a cost for its voters.
+    ///
+    /// @dev    This is splitted from the following permission to allow the DAO to be able to restrict the
+    ///         onchain voting to only a subset of actions. In this case, we want to protect the execution multisig
+    ///         from being compromised by a malicious proposal with the previous permission.
+    bytes32 public constant ONCHAIN_VOTE_CHANGE_EXECUTION_MULTISIG_PERMISSION_ID =
+        keccak256("ONCHAIN_VOTE_CHANGE_EXECUTION_MULTISIG_PERMISSION");
+
+    /// @notice The ID of the permission required to enable onchain vote for arbitrary actions.
+    bytes32 public constant ONCHAIN_VOTE_PERMISSION_ID =
+        keccak256("ONCHAIN_VOTE_PERMISSION");
+
     /// @notice Emitted when the plugin settings are updated.
     /// @param onlyExecutionMultisigProposalCreation If true, only executionMultisig members can create proposals.
     /// @param minTallyApprovals The minimum number of approvals required for a tally to be considered accepted.
@@ -36,6 +54,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultis
     /// @param minVoteDuration The minimum duration of the vote phase of a proposal.
     /// @param minTallyDuration The minimum duration of the tally phase of a proposal.
     /// @param daoTokenAddress The address of the DAO token.
+    /// @param onchainVotingContract The address of the onchain voting contract. This contract is used as fallback if offchain voting fails.
     /// @param censusStrategyURI The URI containing the predicate of the census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
     /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
     event PluginSettingsUpdated(
@@ -46,6 +65,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultis
         uint64 minVoteDuration,
         uint64 minTallyDuration,
         address indexed daoTokenAddress,
+        address onchainVotingContract,
         string indexed censusStrategyURI,
         uint256 minProposerVotingPower
     );
@@ -58,6 +78,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultis
     /// @param minVoteDuration The minimum duration of the vote phase of a proposal.
     /// @param minTallyDuration The minimum duration of the tally phase of a proposal.
     /// @param daoTokenAddress The address of the DAO token.
+    /// @param onchainVotingContract The address of the onchain voting contract. This contract is used as fallback if offchain voting fails.
     /// @param minProposerVotingPower The minimum voting power required to create a proposal. Voting power is extracted from the DAO token
     /// @param censusStrategyURI The URI containing he census strategy to be used in the proposals. See: https://github.com/vocdoni/census3
     struct PluginSettings {
@@ -68,6 +89,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultis
         uint64 minVoteDuration;
         uint64 minTallyDuration;
         address daoTokenAddress;
+        address onchainVotingContract;
         uint256 minProposerVotingPower;
         string censusStrategyURI;
     }
@@ -233,6 +255,7 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultis
             minParticipation: _pluginSettings.minParticipation,
             supportThreshold: _pluginSettings.supportThreshold,
             daoTokenAddress: _pluginSettings.daoTokenAddress,
+            onchainVotingContract: _pluginSettings.onchainVotingContract,
             censusStrategyURI: _pluginSettings.censusStrategyURI,
             minProposerVotingPower: _pluginSettings.minProposerVotingPower
         });
