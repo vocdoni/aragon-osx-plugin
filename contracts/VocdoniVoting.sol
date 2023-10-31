@@ -709,7 +709,7 @@ contract VocdoniVoting is
         return pluginSettings;
     }
 
-    /// @notice Returns true if msg.sender has approved the given proposal tally
+    /// @notice Returns true if the provided _member has approved the given proposal tally
     /// @param _proposalId The ID of the proposal.
     /// @return Whether the msg.sender has approved the proposal tally.
     function hasApprovedTally(uint256 _proposalId, address _member) external view returns (bool) {
