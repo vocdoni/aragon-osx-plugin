@@ -17,7 +17,6 @@ abstract contract ExecutionMultisig is
     Initializable,
     ERC165Upgradeable,
     PluginUUPSUpgradeable,
-    VocdoniProposalUpgradeable,
     Addresslist
 {
     using SafeCastUpgradeable for uint256;
@@ -41,13 +40,7 @@ abstract contract ExecutionMultisig is
     /// @return Returns `true` if the interface is supported.
     function supportsInterface(
         bytes4 _interfaceId
-    )
-        public
-        view
-        virtual
-        override(ERC165Upgradeable, PluginUUPSUpgradeable, VocdoniProposalUpgradeable)
-        returns (bool)
-    {
+    ) public view virtual override(ERC165Upgradeable, PluginUUPSUpgradeable) returns (bool) {
         return
             _interfaceId == type(IExecutionMultisig).interfaceId ||
             _interfaceId == type(Addresslist).interfaceId ||

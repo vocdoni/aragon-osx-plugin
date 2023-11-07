@@ -17,7 +17,12 @@ import {ExecutionMultisig} from "./ExecutionMultisig.sol";
 /// @author Vocdoni
 /// @notice The Vocdoni gasless voting data contract for the OSX plugin.
 /// @notice The voting Proposal is managed gasless on the Vocdoni blockchain.
-contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultisig {
+contract VocdoniVoting is
+    IVocdoniVoting,
+    PluginUUPSUpgradeable,
+    VocdoniProposalUpgradeable,
+    ExecutionMultisig
+{
     using SafeCastUpgradeable for uint256;
 
     /// @notice The [ERC-165](https://eips.ethereum.org/EIPS/eip-165) interface ID of the contract.
@@ -100,7 +105,13 @@ contract VocdoniVoting is IVocdoniVoting, PluginUUPSUpgradeable, ExecutionMultis
     /// @return Returns `true` if the interface is supported.
     function supportsInterface(
         bytes4 _interfaceId
-    ) public view virtual override(PluginUUPSUpgradeable, ExecutionMultisig) returns (bool) {
+    )
+        public
+        view
+        virtual
+        override(PluginUUPSUpgradeable, ExecutionMultisig, VocdoniProposalUpgradeable)
+        returns (bool)
+    {
         return
             _interfaceId == VOCDONI_INTERFACE_ID ||
             _interfaceId == type(IVocdoniVoting).interfaceId ||
