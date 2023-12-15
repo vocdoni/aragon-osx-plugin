@@ -10,7 +10,6 @@ import {PluginUUPSUpgradeable} from "@aragon/osx/core/plugin/PluginUUPSUpgradeab
 import {Addresslist} from "@aragon/osx/plugins/utils/Addresslist.sol";
 
 import {IExecutionMultisig} from "./IExecutionMultisig.sol";
-import {VocdoniProposalUpgradeable} from "./VocdoniProposalUpgradeable.sol";
 
 abstract contract ExecutionMultisig is
     IExecutionMultisig,
