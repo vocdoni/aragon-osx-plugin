@@ -16,11 +16,7 @@ import {ExecutionMultisig} from "./ExecutionMultisig.sol";
 /// @author Vocdoni
 /// @notice The Vocdoni gasless voting data contract for the OSX plugin.
 /// @notice The voting Proposal is managed gasless on the Vocdoni blockchain.
-contract VocdoniVoting is
-    IVocdoniVoting,
-    VocdoniProposalUpgradeable,
-    ExecutionMultisig
-{
+contract VocdoniVoting is IVocdoniVoting, VocdoniProposalUpgradeable, ExecutionMultisig {
     using SafeCastUpgradeable for uint256;
 
     /// @notice The [ERC-165](https://eips.ethereum.org/EIPS/eip-165) interface ID of the contract.
@@ -103,13 +99,7 @@ contract VocdoniVoting is
     /// @return Returns `true` if the interface is supported.
     function supportsInterface(
         bytes4 _interfaceId
-    )
-        public
-        view
-        virtual
-        override(ExecutionMultisig, VocdoniProposalUpgradeable)
-        returns (bool)
-    {
+    ) public view virtual override(ExecutionMultisig, VocdoniProposalUpgradeable) returns (bool) {
         return
             _interfaceId == VOCDONI_INTERFACE_ID ||
             _interfaceId == type(IVocdoniVoting).interfaceId ||
@@ -164,7 +154,8 @@ contract VocdoniVoting is
         Proposal memory _proposal,
         address _member
     ) internal pure returns (bool) {
-        for (uint256 i = 0; i < _proposal.approvers.length; ) {
+        uint approversLength = _proposal.approvers.length;
+        for (uint256 i = 0; i < approversLength; ) {
             if (_proposal.approvers[i] == _member) {
                 return true;
             }
@@ -345,6 +336,7 @@ contract VocdoniVoting is
         proposal.parameters.censusRoot = _parameters.censusRoot;
         proposal.parameters.securityBlock = block.number.toUint64();
         proposal.allowFailureMap = _allowFailureMap;
+
         for (uint256 i = 0; i < _actions.length; ) {
             proposal.actions.push(_actions[i]);
             unchecked {
@@ -472,7 +464,8 @@ contract VocdoniVoting is
             address[] memory newApprovers = new address[](0);
             // newApprovers are the oldApprovers list without the non executionMultisig members at the current block
             uint8 newApproversCount = 0;
-            for (uint256 i = 0; i < proposal.approvers.length; ) {
+            uint approversLength = proposal.approvers.length;
+            for (uint256 i = 0; i < approversLength; ) {
                 address oldApprover = proposal.approvers[i];
                 if (
                     _isExecutionMultisigMember(oldApprover) &&
