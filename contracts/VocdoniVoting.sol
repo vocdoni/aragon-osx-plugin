@@ -6,7 +6,6 @@ import {IVotesUpgradeable} from "@openzeppelin/contracts-upgradeable/governance/
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import {IDAO} from "@aragon/osx/core/dao/IDAO.sol";
-import {PluginUUPSUpgradeable} from "@aragon/osx/core/plugin/PluginUUPSUpgradeable.sol";
 import {RATIO_BASE, _applyRatioCeiled, RatioOutOfBounds} from "@aragon/osx/plugins/utils/Ratio.sol";
 
 import {VocdoniProposalUpgradeable} from "./VocdoniProposalUpgradeable.sol";
@@ -19,7 +18,6 @@ import {ExecutionMultisig} from "./ExecutionMultisig.sol";
 /// @notice The voting Proposal is managed gasless on the Vocdoni blockchain.
 contract VocdoniVoting is
     IVocdoniVoting,
-    PluginUUPSUpgradeable,
     VocdoniProposalUpgradeable,
     ExecutionMultisig
 {
@@ -109,7 +107,7 @@ contract VocdoniVoting is
         public
         view
         virtual
-        override(PluginUUPSUpgradeable, ExecutionMultisig, VocdoniProposalUpgradeable)
+        override(ExecutionMultisig, VocdoniProposalUpgradeable)
         returns (bool)
     {
         return
