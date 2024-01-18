@@ -48,3 +48,11 @@ contract GovernanceERC20Mock is GovernanceERC20 {
         }
     }
 }
+
+contract ERC20Basic is ERC20 {
+    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
+
+    function mint(address to, uint256 amount) public {
+        _mint(to, amount);
+    }
+}

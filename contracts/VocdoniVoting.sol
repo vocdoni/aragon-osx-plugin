@@ -299,7 +299,8 @@ contract VocdoniVoting is IVocdoniVoting, VocdoniProposalUpgradeable, ExecutionM
 
         if (_pluginSettings.minProposerVotingPower != 0) {
             // Because of the checks in `VocdoniVotingSetup`, we can assume that `votingToken` is an [ERC-20](https://eips.ethereum.org/EIPS/eip-20) token.
-            uint256 votes = IVotesUpgradeable(_pluginSettings.daoTokenAddress).getVotes(sender);
+            // It can be the case where the token does not implement the getVotes() function, so we need to handle the call as a possible failure to ignore.
+            uint256 votes = _tryGetVotes(sender);
             uint256 balance = IERC20Upgradeable(_pluginSettings.daoTokenAddress).balanceOf(sender);
 
             if (
@@ -657,5 +658,21 @@ contract VocdoniVoting is IVocdoniVoting, VocdoniProposalUpgradeable, ExecutionM
     /// @return The last block number where the plugin settings changed.
     function getLastPluginSettingsChange() external view returns (uint64) {
         return lastPluginSettingsChange;
+    }
+
+    /// @notice Handles the getVotes() call possible failure.
+    /// @param voter The address of the user.
+    /// @return uint256 The votes of the user.
+    function _tryGetVotes(address voter) internal view returns (uint256) {
+        (bool success, bytes memory data) = pluginSettings.daoTokenAddress.staticcall(
+            abi.encodeCall(IVotesUpgradeable.getVotes, voter)
+        );
+        if (success && data.length == 32) {
+            // Decode and return the votes if the call was successful and data length is correct
+            return abi.decode(data, (uint256));
+        } else {
+            // If the call failed or returned unexpected data, handle as error
+            return 0;
+        }
     }
 }
