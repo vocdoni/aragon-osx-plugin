@@ -14,6 +14,8 @@ import {
   GovernanceERC20Mock,
   GovernanceERC20Mock__factory,
   IExecutionMultisig__factory,
+  ERC20Basic,
+  ERC20Basic__factory,
 } from '../typechain';
 
 import {VOCDONI_EVENTS} from './utils/event';
@@ -58,6 +60,8 @@ describe('Vocdoni Plugin', function () {
   let vocdoniProposalParams: VocdoniProposalParams;
   let governanceErc20Mock: GovernanceERC20Mock;
   let GovernanceERC20Mock: GovernanceERC20Mock__factory;
+  let basicErc20Mock: ERC20Basic;
+  let BasicErc20Mock: ERC20Basic__factory;
 
   const id = 0;
 
@@ -66,6 +70,15 @@ describe('Vocdoni Plugin', function () {
   ) {
     const promises = balances.map(balance =>
       governanceErc20Mock.setBalance(balance.receiver, balance.amount)
+    );
+    await Promise.all(promises);
+  }
+
+  async function setBalancesBasicERC20(
+    balances: {receiver: string; amount: number | BigNumber}[]
+  ) {
+    const promises = balances.map(balance =>
+      basicErc20Mock.mint(balance.receiver, balance.amount)
     );
     await Promise.all(promises);
   }
@@ -110,6 +123,9 @@ describe('Vocdoni Plugin', function () {
         amounts: [],
       }
     );
+
+    BasicErc20Mock = new ERC20Basic__factory(signers[0]);
+    basicErc20Mock = await BasicErc20Mock.deploy('BASIC', 'BASIC');
 
     vocdoniVotingSettings = {
       onlyExecutionMultisigProposalCreation: true,
@@ -809,6 +825,83 @@ describe('Vocdoni Plugin', function () {
         'PluginSettingsUpdatedTooRecently'
       );
       await ethers.provider.send('evm_setAutomine', [true]);
+    });
+
+    // check that the user creating a proposal have enough voting power
+    it('reverts if the user does not have enough voting power', async () => {
+      vocdoniVotingSettings.minProposerVotingPower = BigNumber.from(1);
+      vocdoniVotingSettings.onlyExecutionMultisigProposalCreation = false;
+      await setBalances([{receiver: signers[0].address, amount: 10}]);
+      await vocdoniVoting.initialize(
+        dao.address,
+        [signers[0].address, signers[1].address], // signers[0] is listed
+        vocdoniVotingSettings
+      );
+
+      // signers[0] delegates 5 tokens to signers[1]
+      await governanceErc20Mock
+        .connect(signers[0])
+        .delegate(signers[1].address);
+
+      await expect(
+        vocdoniVoting
+          .connect(signers[2])
+          .createProposal(
+            ethers.utils.randomBytes(32),
+            0,
+            vocdoniProposalParams,
+            dummyActions
+          )
+      ).to.be.revertedWithCustomError(vocdoniVoting, 'NotEnoughVotingPower');
+
+      // check that signers[0] can create a proposal
+      await expect(
+        vocdoniVoting
+          .connect(signers[0])
+          .createProposal(
+            ethers.utils.randomBytes(32),
+            0,
+            vocdoniProposalParams,
+            dummyActions
+          )
+      ).not.to.be.reverted;
+
+      // check that signers[1] can create a proposal
+      await expect(
+        vocdoniVoting
+          .connect(signers[1])
+          .createProposal(
+            ethers.utils.randomBytes(32),
+            0,
+            vocdoniProposalParams,
+            dummyActions
+          )
+      ).not.to.be.reverted;
+    });
+
+    // check if token is basic ERC20 _tryGetVotes() pass
+    it('should not fail when calling _tryGetVotes() for any ERC20', async () => {
+      vocdoniVotingSettings.minProposerVotingPower = BigNumber.from(1);
+      vocdoniVotingSettings.onlyExecutionMultisigProposalCreation = false;
+      vocdoniVotingSettings.daoTokenAddress = basicErc20Mock.address;
+      await setBalancesBasicERC20([{receiver: signers[0].address, amount: 10}]);
+      await vocdoniVoting.initialize(
+        dao.address,
+        [signers[0].address, signers[1].address], // signers[0] is listed
+        vocdoniVotingSettings
+      );
+
+      // check that signers[0] can create a proposal
+      await expect(
+        vocdoniVoting
+          .connect(signers[0])
+          .createProposal(
+            ethers.utils.randomBytes(32),
+            0,
+            vocdoniProposalParams,
+            dummyActions
+          )
+      ).not.to.be.reverted;
     });
 
     context('onlyCommitteProposalCreation', async () => {

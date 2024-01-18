@@ -237,13 +237,10 @@ describe('VocdoniVotingSetup', function () {
       const nonce = await ethers.provider.getTransactionCount(
         vocdoniVotingSetup.address
       );
-      const anticipatedWrappedTokenAddress = ethers.utils.getContractAddress({
-        from: vocdoniVotingSetup.address,
-        nonce: nonce,
-      });
+ 
       const anticipatedPluginAddress = ethers.utils.getContractAddress({
         from: vocdoniVotingSetup.address,
-        nonce: nonce + 1,
+        nonce: nonce,
       });
 
       const data = abiCoder.encode(prepareInstallationDataTypes, [
@@ -263,7 +260,7 @@ describe('VocdoniVotingSetup', function () {
 
       expect(plugin).to.be.equal(anticipatedPluginAddress);
       expect(helpers.length).to.be.equal(1);
-      expect(helpers).to.be.deep.equal([anticipatedWrappedTokenAddress]);
+      expect(helpers).to.be.deep.equal([erc20Token.address]);
       expect(permissions.length).to.be.equal(4);
       expect(permissions).to.deep.equal([
         [
@@ -295,42 +292,6 @@ describe('VocdoniVotingSetup', function () {
           EXECUTE_PERMISSION_ID,
         ],
       ]);
-    });
-
-    it('correctly sets up `GovernanceWrappedERC20` helper, when an ERC20 token address is supplied', async () => {
-      const nonce = await ethers.provider.getTransactionCount(
-        vocdoniVotingSetup.address
-      );
-      const anticipatedWrappedTokenAddress = ethers.utils.getContractAddress({
-        from: vocdoniVotingSetup.address,
-        nonce: nonce,
-      });
-
-      const data = abiCoder.encode(prepareInstallationDataTypes, [
-        Object.values([signers[0].address]),
-        Object.values(defaultVocdoniVotingSettings),
-        [erc20Token.address, tokenName, tokenSymbol],
-        Object.values(defaultMintSettings),
-      ]);
-
-      await vocdoniVotingSetup.prepareInstallation(targetDao.address, data);
-
-      const GovernanceWrappedERC20Factory = new GovernanceWrappedERC20__factory(
-        signers[0]
-      );
-      const governanceWrappedERC20Contract =
-        GovernanceWrappedERC20Factory.attach(anticipatedWrappedTokenAddress);
-
-      expect(await governanceWrappedERC20Contract.name()).to.be.equal(
-        tokenName
-      );
-      expect(await governanceWrappedERC20Contract.symbol()).to.be.equal(
-        tokenSymbol
-      );
-
-      expect(await governanceWrappedERC20Contract.underlying()).to.be.equal(
-        erc20Token.address
-      );
     });
 
     it('correctly returns plugin, helpers and permissions, when a governance token address is supplied', async () => {
