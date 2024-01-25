@@ -14,8 +14,8 @@ import {
   GovernanceERC20Mock,
   GovernanceERC20Mock__factory,
   IExecutionMultisig__factory,
-  ERC20Basic,
-  ERC20Basic__factory,
+  ERC20BasicMock,
+  ERC20BasicMock__factory,
 } from '../typechain';
 
 import {VOCDONI_EVENTS} from './utils/event';
@@ -60,8 +60,8 @@ describe('Vocdoni Plugin', function () {
   let vocdoniProposalParams: VocdoniProposalParams;
   let governanceErc20Mock: GovernanceERC20Mock;
   let GovernanceERC20Mock: GovernanceERC20Mock__factory;
-  let basicErc20Mock: ERC20Basic;
-  let BasicErc20Mock: ERC20Basic__factory;
+  let basicErc20Mock: ERC20BasicMock;
+  let BasicErc20Mock: ERC20BasicMock__factory;
 
   const id = 0;
 
@@ -124,7 +124,7 @@ describe('Vocdoni Plugin', function () {
       }
     );
 
-    BasicErc20Mock = new ERC20Basic__factory(signers[0]);
+    BasicErc20Mock = new ERC20BasicMock__factory(signers[0]);
     basicErc20Mock = await BasicErc20Mock.deploy('BASIC', 'BASIC');
 
     vocdoniVotingSettings = {
