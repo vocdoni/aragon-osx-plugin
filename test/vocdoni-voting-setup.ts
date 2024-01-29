@@ -237,7 +237,7 @@ describe('VocdoniVotingSetup', function () {
       const nonce = await ethers.provider.getTransactionCount(
         vocdoniVotingSetup.address
       );
- 
+
       const anticipatedPluginAddress = ethers.utils.getContractAddress({
         from: vocdoniVotingSetup.address,
         nonce: nonce,
