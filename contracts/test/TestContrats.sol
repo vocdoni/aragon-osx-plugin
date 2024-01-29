@@ -5,7 +5,6 @@ import {GovernanceERC20} from "@aragon/osx/token/ERC20/governance/GovernanceERC2
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IDAO} from "@aragon/osx/core/dao/IDAO.sol";
 
-
 contract GovernanceERC20Mock is GovernanceERC20 {
     constructor(
         IDAO _dao,

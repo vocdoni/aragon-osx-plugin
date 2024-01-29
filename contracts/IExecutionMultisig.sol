@@ -4,11 +4,11 @@ pragma solidity 0.8.17;
 interface IExecutionMultisig {
     /// @notice Emitted when one or more execution multisig members are added.
     /// @param newMembers The addresses of the new execution multisig members.
-    event ExecutionMultisigMembersAdded(address[] indexed newMembers);
+    event ExecutionMultisigMembersAdded(address[] newMembers);
 
     /// @notice Emitted when one or more execution multisig member are removed.
     /// @param removedMembers The addresses of the removed execution multisig members.
-    event ExecutionMultisigMembersRemoved(address[] indexed removedMembers);
+    event ExecutionMultisigMembersRemoved(address[] removedMembers);
 
     /// @notice Thrown if the address list length is out of bounds.
     /// @param limit The limit value.
